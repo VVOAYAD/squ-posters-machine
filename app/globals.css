@@ -1,26 +1,220 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* SQU locked palette */
+  --maroon:   #7a0020;
+  --maroon-d: #500015;
+  --maroon-l: #9b1535;
+  --gold:     #c9a84c;
+  --gold-lt:  #e8c55a;
+  --gold-dk:  #a07828;
+  --bg:       #f5f0eb;
+  --paper:    #fbfaf6;
+  --white:    #ffffff;
+  --text:     #1c1c1c;
+  --sub:      #555;
+  --border:   #e2d0c8;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-cairo: var(--font-cairo);
+  --font-playfair: var(--font-playfair);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-cairo), 'Tahoma', sans-serif;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   POSTER PREVIEW — locked DNA from the original SQU templates
+   ═══════════════════════════════════════════════════════════════ */
+.poster-canvas {
+  width: 1000px;
+  background: var(--bg);
+  font-family: var(--font-cairo), 'Tahoma', sans-serif;
+  color: var(--text);
+}
+.poster-canvas.rtl { direction: rtl; }
+.poster-canvas.ltr { direction: ltr; }
+.poster-canvas * { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── HEADER ── */
+.pc-header {
+  background: var(--white);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  border-bottom: 4px solid var(--gold);
+}
+.pc-strip { width: 100%; flex-shrink: 0; line-height: 0; }
+.pc-header-main {
+  display: flex; align-items: center; justify-content: center;
+  padding: 14px 30px;
+}
+.pc-logo img { height: 100px; width: auto; }
+
+/* ── REFBAR ── */
+.pc-refbar {
+  background: var(--paper);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 32px;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+.pc-refbar .cell { display: flex; gap: 8px; align-items: baseline; color: var(--maroon-d); }
+.pc-refbar .lbl  { color: var(--gold-dk); font-weight: 800; letter-spacing: 0.5px; font-size: 11px; }
+.pc-refbar .val  { font-weight: 700; }
+.poster-canvas.ltr .pc-refbar .lbl { letter-spacing: 1px; text-transform: uppercase; font-size: 10.5px; }
+
+/* ── TITLE ── */
+.pc-title-wrap {
+  background: var(--paper); text-align: center;
+  padding: 4px 30px 6px;
+}
+.pc-title-main {
+  font-family: var(--font-cairo), sans-serif;
+  font-size: 32px; font-weight: 900; color: var(--maroon-d);
+  line-height: 1.1; letter-spacing: 1px;
+  display: inline-block;
+}
+.poster-canvas.ltr .pc-title-main {
+  font-family: var(--font-playfair), serif;
+  font-size: 36px; letter-spacing: 4px; text-transform: uppercase;
+}
+.pc-title-sub {
+  font-size: 10.5px; font-weight: 700; color: var(--gold-dk);
+  letter-spacing: 4px; margin-top: 4px;
+}
+.poster-canvas.ltr .pc-title-sub { text-transform: uppercase; }
+
+/* ── SUBJECT RIBBON ── */
+.pc-subject {
+  background: linear-gradient(90deg, var(--maroon-d), var(--maroon) 50%, var(--maroon-d));
+  padding: 14px 36px;
+  display: flex; align-items: center; gap: 16px;
+  border-top: 3px solid var(--gold);
+  border-bottom: 3px solid var(--gold);
+}
+.pc-subject-lbl {
+  color: var(--gold-lt); font-size: 11px; font-weight: 800;
+  letter-spacing: 2px; flex-shrink: 0;
+}
+.poster-canvas.rtl .pc-subject-lbl { padding-left: 16px; border-left: 1px solid rgba(201,168,76,0.4); }
+.poster-canvas.ltr .pc-subject-lbl {
+  padding-right: 16px; border-right: 1px solid rgba(201,168,76,0.4);
+  letter-spacing: 2.5px; text-transform: uppercase;
+}
+.pc-subject-text {
+  color: var(--white); font-size: 17px; font-weight: 800;
+  line-height: 1.5; flex: 1;
+}
+.poster-canvas.ltr .pc-subject-text { font-size: 16.5px; line-height: 1.45; }
+
+/* ── LETTER BODY ── */
+.pc-letter {
+  background: var(--paper);
+  padding: 22px 26px 18px;
+  position: relative;
+}
+.pc-letter::before {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 4px;
+  background: linear-gradient(to bottom, var(--gold-lt), var(--gold), var(--gold-dk));
+}
+.poster-canvas.rtl .pc-letter::before { right: 0; }
+.poster-canvas.ltr .pc-letter::before { left: 0; }
+
+.pc-body-row { display: flex; align-items: stretch; gap: 16px; }
+.poster-canvas.rtl .pc-body-row { direction: rtl; }
+.pc-body-col { flex: 1; min-width: 0; }
+
+/* ── DOCS COLUMN (المؤيدات) ── */
+.pc-docs-col {
+  width: 270px; flex-shrink: 0;
+  background: var(--white); border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(122,0,32,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  overflow: hidden;
+  align-self: flex-start;
+}
+.pc-docs-head {
+  background: linear-gradient(90deg, var(--maroon-d), var(--maroon) 50%, var(--maroon-d));
+  color: var(--white); font-size: 14px; font-weight: 800;
+  padding: 11px 13px; text-align: center;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--gold);
+}
+.poster-canvas.ltr .pc-docs-head { font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase; }
+.pc-docs-intro {
+  font-size: 10.5px; color: var(--sub); line-height: 1.7;
+  padding: 8px 12px; background: #fef8f9;
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+}
+.pc-doc-row {
+  display: flex; align-items: center; gap: 9px; padding: 9px 11px;
+  font-size: 12px; border-bottom: 1px solid #f0e4e6;
+  color: var(--text); line-height: 1.45;
+}
+.poster-canvas.ltr .pc-doc-row { font-size: 11.5px; }
+.pc-doc-row:last-child { border-bottom: none; }
+.pc-doc-row:nth-child(odd)  { background: #fdf5f7; }
+.pc-doc-row:nth-child(even) { background: var(--white); }
+.pc-dn {
+  width: 22px; height: 22px; background: var(--maroon); color: var(--white);
+  border-radius: 50%; font-size: 10.5px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  box-shadow: 0 0 0 2px var(--gold);
+}
+
+/* ── PARAGRAPHS ── */
+.pc-para {
+  font-size: 14.5px; font-weight: 500; color: var(--text);
+  line-height: 2; margin-bottom: 14px; text-align: justify;
+  white-space: pre-wrap;
+}
+.poster-canvas.ltr .pc-para { font-size: 14px; line-height: 1.95; }
+
+/* ── NOTE BOX (Wusool-style) ── */
+.pc-note {
+  background: linear-gradient(135deg, #fdf2f3 0%, #fbe5e8 100%);
+  border-radius: 6px;
+  padding: 14px 20px;
+  margin: 16px 0 18px;
+  display: flex; align-items: flex-start; gap: 14px;
+}
+.poster-canvas.rtl .pc-note { border-right: 5px solid var(--maroon); }
+.poster-canvas.ltr .pc-note { border-left: 5px solid var(--maroon); }
+.pc-note-icon {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--maroon-l), var(--maroon-d));
+  color: var(--gold-lt); font-size: 18px; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2.5px var(--gold), 0 2px 6px rgba(0,0,0,0.18);
+}
+.pc-note-body {
+  font-size: 13.5px; color: var(--maroon-d); font-weight: 600;
+  line-height: 1.85; padding-top: 4px;
+  white-space: pre-wrap;
+}
+.poster-canvas.ltr .pc-note-body { font-size: 13px; line-height: 1.75; }
+.pc-note-lbl {
+  display: block; font-weight: 800; color: var(--maroon-d);
+  font-size: 12.5px; letter-spacing: 0.4px;
+  margin-bottom: 4px;
+}
+.poster-canvas.ltr .pc-note-lbl { font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; }
+
+/* ── FOOTER ── */
+.pc-footer {
+  background: linear-gradient(90deg, var(--maroon-d), var(--maroon) 50%, var(--maroon-d));
+  padding: 12px 26px; display: flex; align-items: center; justify-content: space-between;
+  direction: ltr; border-top: 3px solid var(--gold);
+}
+.pc-fi { display: flex; align-items: center; gap: 9px; color: var(--white); font-size: 13px; }
+.pc-ficon {
+  width: 28px; height: 28px; background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(201,168,76,0.4); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--gold-lt);
+}
+.pc-fmeta { font-size: 10.5px; color: rgba(255,255,255,0.55); text-align: center; line-height: 1.65; }
+.poster-canvas.rtl .pc-fmeta { direction: rtl; }
