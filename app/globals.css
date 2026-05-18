@@ -203,6 +203,141 @@ body {
 }
 .poster-canvas.ltr .pc-note-lbl { font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; }
 
+/* ═══════════════════════════════════════════════════════════════
+   POSTER (procedure) — info bar + steps timeline + color legend
+   ═══════════════════════════════════════════════════════════════ */
+
+/* maroon gradient info bar */
+.pcp-info-bar {
+  background: linear-gradient(90deg, var(--maroon-d), var(--maroon) 40%, var(--maroon-l) 100%);
+  display: flex; align-items: stretch;
+  border-bottom: 3px solid var(--gold);
+}
+.pcp-info-cell {
+  flex: 1; padding: 10px 20px;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px;
+}
+.pcp-info-cell:first-child { flex: 2.5; }
+.poster-canvas.rtl .pcp-info-cell { border-left: 1px solid rgba(255,255,255,0.1); }
+.poster-canvas.rtl .pcp-info-cell:last-child { border-left: none; }
+.poster-canvas.ltr .pcp-info-cell { border-right: 1px solid rgba(255,255,255,0.1); }
+.poster-canvas.ltr .pcp-info-cell:last-child { border-right: none; }
+.pcp-info-lbl { font-size: 9.5px; color: var(--gold-lt); font-weight: 700; letter-spacing: 0.8px; }
+.pcp-info-val { font-size: 14.5px; color: var(--white); font-weight: 700; line-height: 1.3; }
+.pcp-info-sub { font-size: 10.5px; color: rgba(255,255,255,0.55); margin-top: 1px; }
+
+/* poster body — two columns */
+.pcp-body {
+  display: flex; align-items: flex-start; gap: 14px; padding: 16px 14px;
+  background: var(--bg);
+}
+.poster-canvas.rtl .pcp-body { direction: rtl; }
+.poster-canvas.ltr .pcp-body { direction: ltr; }
+
+/* docs column (right in RTL, left in LTR) */
+.pcp-docs-col {
+  width: 262px; flex-shrink: 0;
+  background: var(--white); border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(122,0,32,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  overflow: hidden;
+}
+.pcp-docs-head {
+  background: var(--maroon); color: var(--white);
+  font-size: 13px; font-weight: 700;
+  padding: 11px 13px; text-align: center;
+}
+.pcp-docs-intro {
+  font-size: 10.5px; color: var(--sub); line-height: 1.75;
+  padding: 8px 12px; background: #fef8f9;
+  border-bottom: 2px solid var(--gold);
+}
+.pcp-doc-row {
+  display: flex; align-items: center; gap: 9px; padding: 8px 11px;
+  font-size: 12.5px; border-bottom: 1px solid #f0e4e6;
+  line-height: 1.45;
+}
+.pcp-doc-row:last-child { border-bottom: none; }
+.pcp-doc-row:nth-child(odd)  { background: #fdf5f7; }
+.pcp-doc-row:nth-child(even) { background: var(--white); }
+.pcp-dn {
+  width: 22px; height: 22px; background: var(--maroon); color: var(--white);
+  border-radius: 50%; font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+/* steps column */
+.pcp-steps-col { flex: 1; min-width: 0; }
+.pcp-steps-head {
+  background: linear-gradient(90deg, var(--gold-dk), var(--gold-lt), var(--gold-dk));
+  color: var(--maroon-d); font-size: 14px; font-weight: 800;
+  padding: 11px 14px; border-radius: 10px 10px 0 0; text-align: center;
+}
+.pcp-timeline {
+  background: var(--white); border-radius: 0 0 10px 10px;
+  box-shadow: 0 4px 20px rgba(122,0,32,0.10), 0 1px 4px rgba(0,0,0,0.06);
+  padding: 12px 12px 12px 14px;
+}
+.pcp-step-item { display: flex; align-items: flex-start; }
+.pcp-node-col { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 42px; }
+
+/* gold-ringed node, colored by department */
+.pcp-node {
+  width: 34px; height: 34px; border-radius: 50%;
+  font-size: 14px; font-weight: 800; color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; z-index: 1;
+  box-shadow: 0 0 0 3px var(--gold), 0 3px 10px rgba(0,0,0,0.22);
+}
+.pcp-node.m { background: radial-gradient(circle at 35% 35%, var(--maroon-l), var(--maroon-d)); }
+.pcp-node.g { background: radial-gradient(circle at 35% 35%, var(--green-l), var(--green)); }
+.pcp-node.b { background: radial-gradient(circle at 35% 35%, var(--blue-l), var(--blue)); }
+
+.pcp-connector {
+  width: 2px; flex: 1; min-height: 8px;
+  background: linear-gradient(to bottom, var(--gold), var(--gold-lt));
+  opacity: 0.6; margin: 2px 0;
+}
+
+.pcp-step-card {
+  flex: 1; border-radius: 7px; padding: 9px 12px;
+  margin-bottom: 6px;
+  background: #fdf6f3;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.poster-canvas.rtl .pcp-step-card { border-right: 3px solid var(--maroon); margin-left: 8px; }
+.poster-canvas.ltr .pcp-step-card { border-left: 3px solid var(--maroon); margin-right: 8px; }
+.pcp-step-card.blue { background: #f0f3fb; }
+.poster-canvas.rtl .pcp-step-card.blue { border-right-color: var(--blue); }
+.poster-canvas.ltr .pcp-step-card.blue { border-left-color: var(--blue); }
+.pcp-step-card.green, .pcp-step-card.last { background: #f0faf4; }
+.poster-canvas.rtl .pcp-step-card.green, .poster-canvas.rtl .pcp-step-card.last { border-right-color: var(--green); }
+.poster-canvas.ltr .pcp-step-card.green, .poster-canvas.ltr .pcp-step-card.last { border-left-color: var(--green); }
+.pcp-step-card.last { margin-bottom: 0; }
+.pcp-step-item:last-child .pcp-step-card { margin-bottom: 0; }
+
+.pcp-st { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.45; }
+.pcp-sd { font-size: 11px; color: var(--sub); margin-top: 3px; line-height: 1.5; }
+
+/* color legend */
+.pcp-legend {
+  display: flex; align-items: center; justify-content: center;
+  gap: 28px; padding: 9px 20px;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 0 14px;
+  border-radius: 0 0 10px 10px;
+}
+.pcp-legend-item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: #444; font-weight: 600; }
+.pcp-ldot {
+  width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: 0 0 0 2.5px var(--gold), 0 1px 4px rgba(0,0,0,0.18);
+}
+.pcp-ldot.m { background: radial-gradient(circle at 35% 35%, var(--maroon-l), var(--maroon-d)); }
+.pcp-ldot.g { background: radial-gradient(circle at 35% 35%, var(--green-l), var(--green)); }
+.pcp-ldot.b { background: radial-gradient(circle at 35% 35%, var(--blue-l), var(--blue)); }
+.pcp-lsep { width: 1px; height: 20px; background: var(--border); }
+
 /* ── FOOTER ── */
 .pc-footer {
   background: linear-gradient(90deg, var(--maroon-d), var(--maroon) 50%, var(--maroon-d));

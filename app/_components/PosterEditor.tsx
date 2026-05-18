@@ -1,0 +1,671 @@
+"use client";
+
+import { useRef, useState } from "react";
+import { Download, FileText, Plus, Trash2 } from "lucide-react";
+import * as htmlToImage from "html-to-image";
+import { saveAs } from "file-saver";
+import {
+  AlignmentType,
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  BorderStyle,
+} from "docx";
+import { Field, PosterFooter, PosterHeader, RowList, Section, TextField } from "./Shared";
+
+type DeptColor = "m" | "b" | "g";
+
+type Step = {
+  title_ar: string;
+  title_en: string;
+  desc_ar: string;
+  desc_en: string;
+  color: DeptColor;
+};
+
+type PosterData = {
+  refValue: string;
+  date_ar: string;
+  date_en: string;
+  procedure_ar: string;
+  procedure_en: string;
+  dept_ar: string;
+  dept_en: string;
+  contact_ar: string;
+  contact_en: string;
+  contactSub_ar: string;
+  contactSub_en: string;
+  docsHead_ar: string;
+  docsHead_en: string;
+  docsIntro_ar: string;
+  docsIntro_en: string;
+  docs_ar: string[];
+  docs_en: string[];
+  stepsHead_ar: string;
+  stepsHead_en: string;
+  steps: Step[];
+  showLegend: boolean;
+  phones: string;
+  email: string;
+};
+
+const DEFAULTS: PosterData = {
+  refValue: "01/2026",
+  date_ar: "أبريل 2026",
+  date_en: "April 2026",
+  procedure_ar: "دفع المستحقات المالية للمستفيدين (الشركات)",
+  procedure_en: "Payment of Financial Dues to Beneficiaries (Companies)",
+  dept_ar: "المصروفات العامة",
+  dept_en: "General Expenditures",
+  contact_ar: "داخلي : 5128",
+  contact_en: "Ext. 5128",
+  contactSub_ar: "المحول للتواصل",
+  contactSub_en: "Direct extension",
+  docsHead_ar: "المستندات المطلوبة (مؤيدات الصرف)",
+  docsHead_en: "Required Documents (Disbursement Evidence)",
+  docsIntro_ar: "يتم تنفيذ خطوات الإجراء بإرفاق مؤيدات الصرف الآتية",
+  docsIntro_en: "The procedure is executed by attaching the following supporting documents",
+  docs_ar: [
+    "عروض الأسعار من الموردين",
+    "محضر اجتماع لجنة الممارسات الداخلية",
+    "تحليل الأسعار",
+    "قرار لجنة الممارسات",
+    "أمر الشراء",
+    "استمارة إثبات تسليم البضاعة في مخازن الجامعة",
+    "الفاتورة",
+    "أي مؤيدات صرف أخرى ذات صلة",
+  ],
+  docs_en: [
+    "Quotations from suppliers",
+    "Internal practices committee meeting minutes",
+    "Price analysis",
+    "Practices committee decision",
+    "Purchase order",
+    "Goods receipt form (University warehouses)",
+    "Invoice",
+    "Any other relevant disbursement evidence",
+  ],
+  stepsHead_ar: "خطوات الإجراء",
+  stepsHead_en: "Procedure Steps",
+  steps: [
+    { color: "m", title_ar: "استلام المعاملة / الطلب", title_en: "Receive transaction / request", desc_ar: "الطلب في نظام موارد (Odoo)", desc_en: "Request submitted via Mawared (Odoo) system" },
+    { color: "m", title_ar: "استلام الفاتورة", title_en: "Receive the invoice", desc_ar: "من الشركات عبر البريد الإلكتروني", desc_en: "From companies via email" },
+    { color: "m", title_ar: "مراجعة المعاملة / الطلب من المختصين", title_en: "Review by specialists", desc_ar: "يتم تنفيذ هذه الخطوة عبر نظام موارد (Odoo) ونظام وزارة المالية", desc_en: "Executed via Mawared (Odoo) and the Ministry of Finance system" },
+    { color: "m", title_ar: "إعداد سند الصرف", title_en: "Prepare disbursement voucher", desc_ar: "إعداد سند الصرف في النظام المالي بوزارة المالية ثم في نظام موارد (Odoo)", desc_en: "Prepared in the Ministry of Finance system, then in Mawared (Odoo)" },
+    { color: "m", title_ar: "اعتماد المعاملة من قبل المخولين بالصرف", title_en: "Approval by authorized disbursement officials", desc_ar: "يتم تنفيذ هذه الخطوة عبر نظام موارد (Odoo) ونظام وزارة المالية", desc_en: "Executed via Mawared (Odoo) and the Ministry of Finance system" },
+    { color: "b", title_ar: "مراجعة سند الصرف من قبل المختصين بدائرة التدقيق الداخلي", title_en: "Review by Internal Audit specialists", desc_ar: "يتم تنفيذ هذه الخطوة عبر نظام موارد (Odoo) ونظام وزارة المالية", desc_en: "Executed via Mawared (Odoo) and the Ministry of Finance system" },
+    { color: "b", title_ar: "اعتماد سند الصرف من قبل المخولين بدائرة التدقيق الداخلي", title_en: "Approval by Internal Audit authorized officials", desc_ar: "يتم تنفيذ الخطوة إلكترونياً عبر نظام وزارة المالية", desc_en: "Executed electronically via the Ministry of Finance system" },
+    { color: "g", title_ar: "استلام ومراجعة واعتماد وزارة المالية", title_en: "Ministry of Finance receipt, review, and approval", desc_ar: "يتم تنفيذ الخطوة إلكترونياً", desc_en: "Executed electronically" },
+    { color: "g", title_ar: "تحويل المستحقات المالية إلى المستفيدين (الشركات) من قبل وزارة المالية", title_en: "Transfer of financial dues to beneficiaries (companies) by the Ministry of Finance", desc_ar: "يتم تنفيذ هذه الخطوة عبر النظام المالي لوزارة المالية برقم المستفيد", desc_en: "Executed via the Ministry of Finance system using the beneficiary's number" },
+  ],
+  showLegend: true,
+  phones: "5102 | 5126 | 5142 | 5113",
+  email: "FINANCE@SQU.EDU.OM",
+};
+
+function PosterPreview({ data, lang }: { data: PosterData; lang: "ar" | "en" }) {
+  const isAr = lang === "ar";
+  const procedure = isAr ? data.procedure_ar : data.procedure_en;
+  const dept = isAr ? data.dept_ar : data.dept_en;
+  const contact = isAr ? data.contact_ar : data.contact_en;
+  const contactSub = isAr ? data.contactSub_ar : data.contactSub_en;
+  const docsHead = isAr ? data.docsHead_ar : data.docsHead_en;
+  const docsIntro = isAr ? data.docsIntro_ar : data.docsIntro_en;
+  const docs = isAr ? data.docs_ar : data.docs_en;
+  const stepsHead = isAr ? data.stepsHead_ar : data.stepsHead_en;
+  const date = isAr ? data.date_ar : data.date_en;
+
+  const lbl = isAr
+    ? { proc: "وصف الإجراء", dept: "القسم المختص", contact: "رئيس القسم" }
+    : { proc: "Procedure", dept: "Department", contact: "Department Head" };
+
+  const legendLabels = isAr
+    ? ["إجراء داخلي", "دائرة التدقيق الداخلي", "وزارة المالية"]
+    : ["Internal", "Internal Audit", "Ministry of Finance"];
+
+  return (
+    <div className={`poster-canvas ${isAr ? "rtl" : "ltr"}`}>
+      <PosterHeader />
+
+      <div className="pcp-info-bar">
+        <div className="pcp-info-cell">
+          <div className="pcp-info-lbl">{lbl.proc}</div>
+          <div className="pcp-info-val">{procedure}</div>
+        </div>
+        <div className="pcp-info-cell">
+          <div className="pcp-info-lbl">{lbl.dept}</div>
+          <div className="pcp-info-val">{dept}</div>
+        </div>
+        <div className="pcp-info-cell">
+          <div className="pcp-info-lbl">{lbl.contact}</div>
+          <div className="pcp-info-val">{contact}</div>
+          {contactSub && <div className="pcp-info-sub">{contactSub}</div>}
+        </div>
+      </div>
+
+      <div className="pcp-body">
+        <div className="pcp-docs-col">
+          <div className="pcp-docs-head">{docsHead}</div>
+          {docsIntro && <div className="pcp-docs-intro">{docsIntro}</div>}
+          {docs.map((item, i) => (
+            <div key={i} className="pcp-doc-row">
+              <div className="pcp-dn">{i + 1}</div>
+              <div>{item}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="pcp-steps-col">
+          <div className="pcp-steps-head">{stepsHead}</div>
+          <div className="pcp-timeline">
+            {data.steps.map((step, i) => {
+              const isLast = i === data.steps.length - 1;
+              const cardClass = isLast ? "last" : step.color === "b" ? "blue" : step.color === "g" ? "green" : "";
+              return (
+                <div key={i} className="pcp-step-item">
+                  <div className="pcp-node-col">
+                    <div className={`pcp-node ${step.color}`}>{i + 1}</div>
+                    {!isLast && <div className="pcp-connector" />}
+                  </div>
+                  <div className={`pcp-step-card ${cardClass}`}>
+                    <div className="pcp-st">{isAr ? step.title_ar : step.title_en}</div>
+                    {(isAr ? step.desc_ar : step.desc_en) && (
+                      <div className="pcp-sd">{isAr ? step.desc_ar : step.desc_en}</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {data.showLegend && (
+        <div className="pcp-legend">
+          <div className="pcp-legend-item">
+            <div className="pcp-ldot m" />
+            <span>{legendLabels[0]}</span>
+          </div>
+          <div className="pcp-lsep" />
+          <div className="pcp-legend-item">
+            <div className="pcp-ldot b" />
+            <span>{legendLabels[1]}</span>
+          </div>
+          <div className="pcp-lsep" />
+          <div className="pcp-legend-item">
+            <div className="pcp-ldot g" />
+            <span>{legendLabels[2]}</span>
+          </div>
+        </div>
+      )}
+
+      <PosterFooter
+        phones={data.phones}
+        email={data.email}
+        rtl={isAr}
+        meta={
+          isAr
+            ? `رقم المنشور: ${data.refValue} | التاريخ: ${data.date_ar}`
+            : `Publication No.: ${data.refValue} | Date: ${data.date_en}`
+        }
+      />
+    </div>
+  );
+}
+
+function StepEditor({
+  steps,
+  onChange,
+}: {
+  steps: Step[];
+  onChange: (steps: Step[]) => void;
+}) {
+  const updateStep = (i: number, patch: Partial<Step>) => {
+    const next = [...steps];
+    next[i] = { ...next[i], ...patch };
+    onChange(next);
+  };
+
+  const colorBg = (c: DeptColor) =>
+    c === "m" ? "bg-[#7a0020]" : c === "b" ? "bg-[#1a3f8a]" : "bg-[#1a6b3a]";
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <span className="text-[10px] text-neutral-500 font-medium">خطوات · Steps</span>
+        <button
+          onClick={() =>
+            onChange([
+              ...steps,
+              { color: "m", title_ar: "", title_en: "", desc_ar: "", desc_en: "" },
+            ])
+          }
+          className="text-[10px] text-[#7a0020] font-bold flex items-center gap-1 hover:underline"
+          type="button"
+        >
+          <Plus size={12} /> add step
+        </button>
+      </div>
+      <div className="space-y-3">
+        {steps.map((step, i) => (
+          <div key={i} className="border border-neutral-200 rounded p-2 bg-neutral-50">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`${colorBg(step.color)} text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center`}
+                >
+                  {i + 1}
+                </span>
+                <div className="flex gap-0.5">
+                  {(["m", "b", "g"] as DeptColor[]).map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => updateStep(i, { color: c })}
+                      type="button"
+                      className={`${colorBg(c)} w-5 h-5 rounded-full text-white text-[9px] font-bold ${
+                        step.color === c ? "ring-2 ring-[#c9a84c]" : "opacity-50"
+                      }`}
+                      title={c === "m" ? "Internal" : c === "b" ? "Audit" : "Ministry"}
+                    >
+                      {c.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <button
+                onClick={() => onChange(steps.filter((_, idx) => idx !== i))}
+                className="text-neutral-400 hover:text-red-600"
+                aria-label="remove step"
+                type="button"
+              >
+                <Trash2 size={12} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-1.5">
+              <input
+                type="text"
+                placeholder="عنوان (AR)"
+                value={step.title_ar}
+                onChange={(e) => updateStep(i, { title_ar: e.target.value })}
+                dir="rtl"
+                className="px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none"
+              />
+              <input
+                type="text"
+                placeholder="Title (EN)"
+                value={step.title_en}
+                onChange={(e) => updateStep(i, { title_en: e.target.value })}
+                className="px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none"
+              />
+              <textarea
+                placeholder="وصف (AR)"
+                value={step.desc_ar}
+                onChange={(e) => updateStep(i, { desc_ar: e.target.value })}
+                dir="rtl"
+                rows={2}
+                className="px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none leading-relaxed"
+              />
+              <textarea
+                placeholder="Description (EN)"
+                value={step.desc_en}
+                onChange={(e) => updateStep(i, { desc_en: e.target.value })}
+                rows={2}
+                className="px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none leading-relaxed"
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default function PosterEditor({
+  previewLang,
+  onBusy,
+}: {
+  previewLang: "ar" | "en";
+  onBusy: (s: string | null) => void;
+}) {
+  const [data, setData] = useState<PosterData>(DEFAULTS);
+  const arRef = useRef<HTMLDivElement>(null);
+  const enRef = useRef<HTMLDivElement>(null);
+
+  const update = <K extends keyof PosterData>(key: K, val: PosterData[K]) =>
+    setData((d) => ({ ...d, [key]: val }));
+
+  async function downloadPng(lang: "ar" | "en") {
+    const node = lang === "ar" ? arRef.current : enRef.current;
+    if (!node) return;
+    onBusy(`PNG ${lang.toUpperCase()}`);
+    try {
+      await htmlToImage.toPng(node, { pixelRatio: 2, cacheBust: true });
+      const dataUrl = await htmlToImage.toPng(node, {
+        pixelRatio: 2,
+        cacheBust: true,
+        backgroundColor: "#f5f0eb",
+      });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `poster_${data.refValue.replace(/\//g, "-")}_${lang}.png`;
+      a.click();
+    } finally {
+      onBusy(null);
+    }
+  }
+
+  async function downloadDocx() {
+    onBusy(".docx");
+    try {
+      const MAROON = "7A0020";
+      const GOLD_DK = "A07828";
+      const SUB = "555555";
+
+      const arRun = (text: string, opts: { bold?: boolean; size?: number; color?: string } = {}) =>
+        new TextRun({
+          text,
+          bold: opts.bold,
+          size: (opts.size ?? 12) * 2,
+          color: opts.color,
+          font: "Cairo",
+          rightToLeft: true,
+        });
+      const enRun = (text: string, opts: { bold?: boolean; size?: number; color?: string } = {}) =>
+        new TextRun({
+          text,
+          bold: opts.bold,
+          size: (opts.size ?? 12) * 2,
+          color: opts.color,
+          font: "Calibri",
+        });
+      const divider = () =>
+        new Paragraph({
+          children: [new TextRun({ text: "" })],
+          border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: GOLD_DK } },
+          spacing: { after: 200 },
+        });
+
+      const arChildren = [
+        new Paragraph({
+          children: [arRun("دائرة الشؤون المالية – جامعة السلطان قابوس", { bold: true, size: 14, color: MAROON })],
+          bidirectional: true,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            arRun(`رقم المنشور: ${data.refValue}`, { bold: true, size: 11, color: MAROON }),
+            arRun("\t\t\t\t"),
+            arRun(`التاريخ: ${data.date_ar}`, { bold: true, size: 11, color: MAROON }),
+          ],
+          bidirectional: true,
+          alignment: AlignmentType.RIGHT,
+        }),
+        new Paragraph({ children: [arRun("")] }),
+        new Paragraph({
+          children: [arRun(data.procedure_ar, { bold: true, size: 18, color: MAROON })],
+          bidirectional: true,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [arRun(`القسم المختص: ${data.dept_ar}  |  ${data.contact_ar}`, { size: 12, color: SUB })],
+          bidirectional: true,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+        }),
+        divider(),
+        new Paragraph({
+          children: [arRun(data.docsHead_ar, { bold: true, size: 14, color: MAROON })],
+          bidirectional: true,
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 100 },
+        }),
+        ...(data.docsIntro_ar
+          ? [
+              new Paragraph({
+                children: [arRun(data.docsIntro_ar, { size: 11, color: SUB })],
+                bidirectional: true,
+                alignment: AlignmentType.RIGHT,
+                spacing: { after: 100 },
+              }),
+            ]
+          : []),
+        ...data.docs_ar.map(
+          (item, i) =>
+            new Paragraph({
+              children: [arRun(`${i + 1}. ${item}`, { size: 12 })],
+              bidirectional: true,
+              alignment: AlignmentType.RIGHT,
+            }),
+        ),
+        new Paragraph({ children: [arRun("")] }),
+        new Paragraph({
+          children: [arRun(data.stepsHead_ar, { bold: true, size: 14, color: MAROON })],
+          bidirectional: true,
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 100 },
+        }),
+        ...data.steps.flatMap((step, i) => [
+          new Paragraph({
+            children: [arRun(`${i + 1}. ${step.title_ar}`, { bold: true, size: 12, color: MAROON })],
+            bidirectional: true,
+            alignment: AlignmentType.RIGHT,
+            spacing: { after: 60 },
+          }),
+          ...(step.desc_ar
+            ? [
+                new Paragraph({
+                  children: [arRun(step.desc_ar, { size: 11, color: SUB })],
+                  bidirectional: true,
+                  alignment: AlignmentType.RIGHT,
+                  spacing: { after: 140 },
+                }),
+              ]
+            : []),
+        ]),
+        divider(),
+        new Paragraph({
+          children: [arRun(`للاستفسار: ${data.email}  |  ${data.phones}`, { size: 10, color: SUB })],
+          bidirectional: true,
+          alignment: AlignmentType.RIGHT,
+        }),
+      ];
+
+      const enChildren = [
+        new Paragraph({
+          children: [enRun("Department of Financial Affairs – Sultan Qaboos University", { bold: true, size: 13, color: MAROON })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [
+            enRun(`Publication No.: ${data.refValue}`, { bold: true, size: 11, color: MAROON }),
+            enRun("\t\t\t\t"),
+            enRun(`Date: ${data.date_en}`, { bold: true, size: 11, color: MAROON }),
+          ],
+          alignment: AlignmentType.LEFT,
+        }),
+        new Paragraph({ children: [enRun("")] }),
+        new Paragraph({
+          children: [enRun(data.procedure_en, { bold: true, size: 18, color: MAROON })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 100 },
+        }),
+        new Paragraph({
+          children: [enRun(`Department: ${data.dept_en}  |  ${data.contact_en}`, { size: 12, color: SUB })],
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+        }),
+        divider(),
+        new Paragraph({
+          children: [enRun(data.docsHead_en, { bold: true, size: 14, color: MAROON })],
+          alignment: AlignmentType.LEFT,
+          spacing: { after: 100 },
+        }),
+        ...(data.docsIntro_en
+          ? [
+              new Paragraph({
+                children: [enRun(data.docsIntro_en, { size: 11, color: SUB })],
+                alignment: AlignmentType.LEFT,
+                spacing: { after: 100 },
+              }),
+            ]
+          : []),
+        ...data.docs_en.map(
+          (item, i) =>
+            new Paragraph({
+              children: [enRun(`${i + 1}. ${item}`, { size: 12 })],
+              alignment: AlignmentType.LEFT,
+            }),
+        ),
+        new Paragraph({ children: [enRun("")] }),
+        new Paragraph({
+          children: [enRun(data.stepsHead_en, { bold: true, size: 14, color: MAROON })],
+          alignment: AlignmentType.LEFT,
+          spacing: { after: 100 },
+        }),
+        ...data.steps.flatMap((step, i) => [
+          new Paragraph({
+            children: [enRun(`${i + 1}. ${step.title_en}`, { bold: true, size: 12, color: MAROON })],
+            alignment: AlignmentType.LEFT,
+            spacing: { after: 60 },
+          }),
+          ...(step.desc_en
+            ? [
+                new Paragraph({
+                  children: [enRun(step.desc_en, { size: 11, color: SUB })],
+                  alignment: AlignmentType.LEFT,
+                  spacing: { after: 140 },
+                }),
+              ]
+            : []),
+        ]),
+        divider(),
+        new Paragraph({
+          children: [enRun(`For inquiries: ${data.email}  |  ${data.phones}`, { size: 10, color: SUB })],
+          alignment: AlignmentType.LEFT,
+        }),
+      ];
+
+      const doc = new Document({
+        sections: [
+          {
+            properties: { page: { margin: { top: 1080, bottom: 1080, left: 1320, right: 1320 } } },
+            children: [
+              ...arChildren,
+              new Paragraph({ children: [enRun("")], pageBreakBefore: true }),
+              ...enChildren,
+            ],
+          },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `poster_${data.refValue.replace(/\//g, "-")}_text.docx`);
+    } finally {
+      onBusy(null);
+    }
+  }
+
+  return (
+    <div className="flex-1 grid grid-cols-[440px_1fr] overflow-hidden">
+      <aside className="overflow-y-auto bg-white border-r border-neutral-200 p-5 space-y-5">
+        <div className="flex gap-1.5 pb-3 border-b border-neutral-200 -mt-1">
+          <button
+            onClick={() => downloadPng("ar")}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-[#7a0020] hover:bg-[#500015] text-white font-bold text-xs px-2 py-2 rounded transition-colors"
+          >
+            <Download size={13} /> PNG عربي
+          </button>
+          <button
+            onClick={() => downloadPng("en")}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-[#7a0020] hover:bg-[#500015] text-white font-bold text-xs px-2 py-2 rounded transition-colors"
+          >
+            <Download size={13} /> PNG English
+          </button>
+          <button
+            onClick={downloadDocx}
+            className="flex-1 flex items-center justify-center gap-1.5 bg-white border border-[#7a0020] hover:bg-[#fbfaf6] text-[#7a0020] font-bold text-xs px-2 py-2 rounded transition-colors"
+          >
+            <FileText size={13} /> .docx
+          </button>
+        </div>
+
+        <Section title="رقم وتاريخ · Reference & Date">
+          <Field label="Publication No." value={data.refValue} onChange={(v) => update("refValue", v)} />
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="التاريخ (AR)" value={data.date_ar} onChange={(v) => update("date_ar", v)} dir="rtl" />
+            <Field label="Date (EN)" value={data.date_en} onChange={(v) => update("date_en", v)} />
+          </div>
+        </Section>
+
+        <Section title="الإجراء والقسم · Procedure & Department">
+          <TextField label="وصف الإجراء (AR)" value={data.procedure_ar} onChange={(v) => update("procedure_ar", v)} dir="rtl" rows={2} />
+          <TextField label="Procedure (EN)" value={data.procedure_en} onChange={(v) => update("procedure_en", v)} rows={2} />
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="القسم (AR)" value={data.dept_ar} onChange={(v) => update("dept_ar", v)} dir="rtl" />
+            <Field label="Department (EN)" value={data.dept_en} onChange={(v) => update("dept_en", v)} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="رئيس القسم (AR)" value={data.contact_ar} onChange={(v) => update("contact_ar", v)} dir="rtl" />
+            <Field label="Dept. Head (EN)" value={data.contact_en} onChange={(v) => update("contact_en", v)} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="ملاحظة (AR)" value={data.contactSub_ar} onChange={(v) => update("contactSub_ar", v)} dir="rtl" />
+            <Field label="Sub-note (EN)" value={data.contactSub_en} onChange={(v) => update("contactSub_en", v)} />
+          </div>
+        </Section>
+
+        <Section title="المستندات · Documents">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="عنوان (AR)" value={data.docsHead_ar} onChange={(v) => update("docsHead_ar", v)} dir="rtl" />
+            <Field label="Head (EN)" value={data.docsHead_en} onChange={(v) => update("docsHead_en", v)} />
+          </div>
+          <Field label="مقدمة (AR)" value={data.docsIntro_ar} onChange={(v) => update("docsIntro_ar", v)} dir="rtl" />
+          <Field label="Intro (EN)" value={data.docsIntro_en} onChange={(v) => update("docsIntro_en", v)} />
+          <RowList label="عناصر (AR)" items={data.docs_ar} onChange={(items) => update("docs_ar", items)} dir="rtl" />
+          <RowList label="Items (EN)" items={data.docs_en} onChange={(items) => update("docs_en", items)} />
+        </Section>
+
+        <Section title="الخطوات · Steps" subtitle="M=Internal · B=Audit · G=Ministry">
+          <div className="grid grid-cols-2 gap-2">
+            <Field label="عنوان قائمة الخطوات (AR)" value={data.stepsHead_ar} onChange={(v) => update("stepsHead_ar", v)} dir="rtl" />
+            <Field label="Steps head (EN)" value={data.stepsHead_en} onChange={(v) => update("stepsHead_en", v)} />
+          </div>
+          <StepEditor steps={data.steps} onChange={(steps) => update("steps", steps)} />
+        </Section>
+
+        <Section title="الشريط الملوّن · Color legend" toggle={{ on: data.showLegend, set: (v) => update("showLegend", v) }}>
+          <p className="text-[10px] text-neutral-500">
+            Always shows the three department colors below the steps timeline.
+          </p>
+        </Section>
+
+        <Section title="التذييل · Footer">
+          <Field label="الهواتف · Phones" value={data.phones} onChange={(v) => update("phones", v)} />
+          <Field label="البريد · Email" value={data.email} onChange={(v) => update("email", v)} />
+        </Section>
+      </aside>
+
+      <main className="overflow-auto p-6 bg-neutral-200 relative">
+        <div className="flex flex-col items-center gap-4">
+          <div className="text-[11px] text-neutral-500 tracking-widest uppercase">
+            Live preview · {previewLang === "ar" ? "Arabic" : "English"} · displayed at 65%
+          </div>
+          <div className="origin-top scale-[0.65] -mb-[35%]">
+            <div ref={previewLang === "ar" ? arRef : enRef}>
+              <PosterPreview data={data} lang={previewLang} />
+            </div>
+          </div>
+        </div>
+        <div style={{ position: "absolute", left: -99999, top: 0 }} aria-hidden>
+          <div ref={previewLang === "ar" ? enRef : arRef}>
+            <PosterPreview data={data} lang={previewLang === "ar" ? "en" : "ar"} />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
