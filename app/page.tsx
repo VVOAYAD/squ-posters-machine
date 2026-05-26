@@ -1,10 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { FileDown, FileText, LayoutGrid, Type } from "lucide-react";
+import {
+  AlignCenter,
+  AlignJustify,
+  AlignLeft,
+  AlignRight,
+  FileDown,
+  FileText,
+  LayoutGrid,
+  Minus,
+  Plus,
+  Type,
+} from "lucide-react";
 import CircularEditor from "./_components/CircularEditor";
 import PosterEditor from "./_components/PosterEditor";
-import { FONTS, FontKey, FONT_BY_KEY, SIZES, SizeKey, SIZE_BY_KEY } from "./_components/fonts";
+import { Align, FONTS, FontKey, FONT_BY_KEY, clampSize } from "./_components/fonts";
 
 type Mode = "tameem" | "poster";
 
@@ -12,16 +23,16 @@ export default function Home() {
   const [mode, setMode] = useState<Mode>("tameem");
   const [previewLang, setPreviewLang] = useState<"ar" | "en">("ar");
   const [fontKey, setFontKey] = useState<FontKey>("cairo");
-  const [sizeKey, setSizeKey] = useState<SizeKey>("md");
+  const [sizeScale, setSizeScale] = useState<number>(1);
+  const [bodyAlign, setBodyAlign] = useState<Align>("justify");
   const [busy, setBusy] = useState<string | null>(null);
 
   const font = FONT_BY_KEY[fontKey];
-  const size = SIZE_BY_KEY[sizeKey];
 
   return (
     <div className="flex flex-col h-full">
-      <header className="bg-[#500015] text-white px-6 py-3 flex items-center justify-between shadow z-10 gap-4">
-        <div className="flex items-center gap-4">
+      <header className="bg-[#500015] text-white px-5 py-2.5 flex items-center justify-between shadow z-10 gap-3">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full bg-[#c9a84c] flex items-center justify-center text-[#500015] font-black text-xs">
               SQU
@@ -44,7 +55,11 @@ export default function Home() {
 
         <div className="flex items-center gap-2">
           <FontPicker fontKey={fontKey} onChange={setFontKey} />
-          <SizePicker sizeKey={sizeKey} onChange={setSizeKey} />
+          <Divider />
+          <NumericSize value={sizeScale} onChange={setSizeScale} />
+          <Divider />
+          <AlignPicker value={bodyAlign} onChange={setBodyAlign} />
+          <Divider />
 
           <div className="flex bg-black/30 rounded-md p-0.5 text-xs">
             <button
@@ -68,9 +83,21 @@ export default function Home() {
       </header>
 
       {mode === "tameem" ? (
-        <CircularEditor previewLang={previewLang} font={font} sizeScale={size.value} onBusy={setBusy} />
+        <CircularEditor
+          previewLang={previewLang}
+          font={font}
+          sizeScale={sizeScale}
+          bodyAlign={bodyAlign}
+          onBusy={setBusy}
+        />
       ) : (
-        <PosterEditor previewLang={previewLang} font={font} sizeScale={size.value} onBusy={setBusy} />
+        <PosterEditor
+          previewLang={previewLang}
+          font={font}
+          sizeScale={sizeScale}
+          bodyAlign={bodyAlign}
+          onBusy={setBusy}
+        />
       )}
 
       {busy && (
@@ -83,6 +110,10 @@ export default function Home() {
       )}
     </div>
   );
+}
+
+function Divider() {
+  return <div className="w-px h-5 bg-white/15" />;
 }
 
 function ModeTab({
@@ -136,25 +167,83 @@ function FontPicker({
   );
 }
 
-function SizePicker({
-  sizeKey,
+function NumericSize({
+  value,
   onChange,
 }: {
-  sizeKey: SizeKey;
-  onChange: (key: SizeKey) => void;
+  value: number;
+  onChange: (v: number) => void;
 }) {
+  const pct = Math.round(value * 100);
+  const step = (delta: number) => onChange(clampSize((pct + delta) / 100));
+  return (
+    <div className="flex items-center bg-black/30 rounded-md text-xs overflow-hidden">
+      <button
+        onClick={() => step(-5)}
+        className="px-1.5 py-1 text-white/70 hover:text-white hover:bg-black/30"
+        title="Decrease size"
+      >
+        <Minus size={11} />
+      </button>
+      <input
+        type="number"
+        value={pct}
+        min={50}
+        max={200}
+        step={1}
+        onChange={(e) => {
+          const n = Number(e.target.value);
+          if (!Number.isNaN(n)) onChange(clampSize(n / 100));
+        }}
+        className="w-10 bg-transparent text-center text-white outline-none border-l border-r border-white/10 py-1 font-bold tabular-nums"
+        title="Font size %"
+      />
+      <span className="text-white/40 text-[10px] pr-1.5">%</span>
+      <button
+        onClick={() => step(5)}
+        className="px-1.5 py-1 text-white/70 hover:text-white hover:bg-black/30"
+        title="Increase size"
+      >
+        <Plus size={11} />
+      </button>
+      <button
+        onClick={() => onChange(1)}
+        className={`px-1.5 py-1 text-[10px] font-bold ${
+          pct === 100 ? "text-white/30" : "text-[#c9a84c] hover:text-[#e8c55a]"
+        }`}
+        title="Reset to 100%"
+      >
+        ↺
+      </button>
+    </div>
+  );
+}
+
+function AlignPicker({
+  value,
+  onChange,
+}: {
+  value: Align;
+  onChange: (v: Align) => void;
+}) {
+  const opts: { key: Align; icon: React.ReactNode; title: string }[] = [
+    { key: "left",    icon: <AlignLeft size={12} />,    title: "Align left" },
+    { key: "center",  icon: <AlignCenter size={12} />,  title: "Center" },
+    { key: "right",   icon: <AlignRight size={12} />,   title: "Align right" },
+    { key: "justify", icon: <AlignJustify size={12} />, title: "Justify (default)" },
+  ];
   return (
     <div className="flex bg-black/30 rounded-md p-0.5 text-xs">
-      {SIZES.map((s) => (
+      {opts.map((o) => (
         <button
-          key={s.key}
-          onClick={() => onChange(s.key)}
-          title={`Font size ${s.label} · ${Math.round(s.value * 100)}%`}
-          className={`px-2 py-1 rounded transition-colors font-bold ${
-            sizeKey === s.key ? "bg-[#c9a84c] text-[#500015]" : "text-white/70 hover:text-white"
+          key={o.key}
+          onClick={() => onChange(o.key)}
+          title={o.title}
+          className={`px-1.5 py-1 rounded transition-colors ${
+            value === o.key ? "bg-[#c9a84c] text-[#500015]" : "text-white/70 hover:text-white"
           }`}
         >
-          {s.label}
+          {o.icon}
         </button>
       ))}
     </div>

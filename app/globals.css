@@ -176,7 +176,7 @@ body {
 /* ── PARAGRAPHS ── */
 .pc-para {
   font-size: calc(14.5px * var(--fs, 1)); font-weight: 500; color: var(--text);
-  line-height: 2; margin-bottom: 14px; text-align: justify;
+  line-height: 2; margin-bottom: 14px; text-align: var(--body-align, justify);
   white-space: pre-wrap;
 }
 .poster-canvas.ltr .pc-para { font-size: calc(14px * var(--fs, 1)); line-height: 1.95; }
@@ -203,6 +203,7 @@ body {
   font-size: calc(13.5px * var(--fs, 1)); color: var(--maroon-d); font-weight: 600;
   line-height: 1.85; padding-top: 4px;
   white-space: pre-wrap;
+  text-align: var(--body-align, start);
 }
 .poster-canvas.ltr .pc-note-body { font-size: calc(13px * var(--fs, 1)); line-height: 1.75; }
 .pc-note-lbl {
@@ -325,7 +326,7 @@ body {
 .pcp-step-item:last-child .pcp-step-card { margin-bottom: 0; }
 
 .pcp-st { font-size: calc(13px * var(--fs, 1)); font-weight: 700; color: var(--text); line-height: 1.45; }
-.pcp-sd { font-size: calc(11px * var(--fs, 1)); color: var(--sub); margin-top: 3px; line-height: 1.5; }
+.pcp-sd { font-size: calc(11px * var(--fs, 1)); color: var(--sub); margin-top: 3px; line-height: 1.5; text-align: var(--body-align, start); }
 
 /* color legend */
 .pcp-legend {

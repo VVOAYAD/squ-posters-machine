@@ -24,7 +24,16 @@ import {
   PosterHeader,
   Section,
 } from "./Shared";
-import type { FontOption } from "./fonts";
+import type { Align, FontOption } from "./fonts";
+
+function alignToDocx(a: Align): typeof AlignmentType[keyof typeof AlignmentType] {
+  switch (a) {
+    case "left":    return AlignmentType.LEFT;
+    case "center":  return AlignmentType.CENTER;
+    case "right":   return AlignmentType.RIGHT;
+    case "justify": return AlignmentType.JUSTIFIED;
+  }
+}
 
 type CircularData = {
   refValue: string;
@@ -232,11 +241,13 @@ export default function CircularEditor({
   previewLang,
   font,
   sizeScale,
+  bodyAlign,
   onBusy,
 }: {
   previewLang: Lang;
   font: FontOption;
   sizeScale: number;
+  bodyAlign: Align;
   onBusy: (s: string | null) => void;
 }) {
   const [data, setData] = useState<CircularData>(DEFAULTS);
@@ -305,6 +316,7 @@ export default function CircularEditor({
 
       const arParagraphs = data.body_ar.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
       const enParagraphs = data.body_en.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+      const bodyDocxAlign = alignToDocx(bodyAlign);
 
       const arChildren = [
         new Paragraph({
@@ -366,7 +378,7 @@ export default function CircularEditor({
             new Paragraph({
               children: [arRun(p, { size: 12 })],
               bidirectional: true,
-              alignment: AlignmentType.JUSTIFIED,
+              alignment: bodyDocxAlign,
               spacing: { after: 200 },
             }),
         ),
@@ -378,7 +390,7 @@ export default function CircularEditor({
                   arRun(data.note_ar, { bold: true, size: 12, color: MAROON }),
                 ],
                 bidirectional: true,
-                alignment: AlignmentType.JUSTIFIED,
+                alignment: bodyDocxAlign,
                 spacing: { after: 200 },
               }),
             ]
@@ -486,7 +498,7 @@ export default function CircularEditor({
           (p) =>
             new Paragraph({
               children: [enRun(p, { size: 12 })],
-              alignment: AlignmentType.JUSTIFIED,
+              alignment: bodyDocxAlign,
               spacing: { after: 200 },
             }),
         ),
@@ -497,7 +509,7 @@ export default function CircularEditor({
                   enRun(`${data.noteLabel_en} `, { bold: true, size: 12, color: MAROON }),
                   enRun(data.note_en, { bold: true, size: 12, color: MAROON }),
                 ],
-                alignment: AlignmentType.JUSTIFIED,
+                alignment: bodyDocxAlign,
                 spacing: { after: 200 },
               }),
             ]
@@ -762,7 +774,11 @@ export default function CircularEditor({
           <div className="origin-top scale-[0.65] -mb-[35%]">
             <div
               ref={previewLang === "ar" ? arRef : enRef}
-              style={{ ["--font-poster" as string]: `var(${font.cssVar})`, ["--fs" as string]: sizeScale }}
+              style={{
+              ["--font-poster" as string]: `var(${font.cssVar})`,
+              ["--fs" as string]: sizeScale,
+              ["--body-align" as string]: bodyAlign,
+            }}
             >
               <CircularPreview data={data} lang={previewLang} />
             </div>
@@ -771,7 +787,11 @@ export default function CircularEditor({
         <div style={{ position: "absolute", left: -99999, top: 0 }} aria-hidden>
           <div
             ref={previewLang === "ar" ? enRef : arRef}
-            style={{ ["--font-poster" as string]: `var(${font.cssVar})`, ["--fs" as string]: sizeScale }}
+            style={{
+              ["--font-poster" as string]: `var(${font.cssVar})`,
+              ["--fs" as string]: sizeScale,
+              ["--body-align" as string]: bodyAlign,
+            }}
           >
             <CircularPreview data={data} lang={previewLang === "ar" ? "en" : "ar"} />
           </div>

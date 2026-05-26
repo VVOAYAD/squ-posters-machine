@@ -55,3 +55,11 @@ export const SIZES: SizeOption[] = [
 export const SIZE_BY_KEY: Record<SizeKey, SizeOption> = Object.fromEntries(
   SIZES.map((s) => [s.key, s]),
 ) as Record<SizeKey, SizeOption>;
+
+export type Align = "left" | "center" | "right" | "justify";
+
+/** Clamp size scale into the supported range (50%–200%). */
+export function clampSize(scale: number): number {
+  if (Number.isNaN(scale)) return 1;
+  return Math.max(0.5, Math.min(2.0, Math.round(scale * 100) / 100));
+}

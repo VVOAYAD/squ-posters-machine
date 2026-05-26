@@ -24,7 +24,16 @@ import {
   PosterHeader,
   Section,
 } from "./Shared";
-import type { FontOption } from "./fonts";
+import type { Align, FontOption } from "./fonts";
+
+function alignToDocx(a: Align): typeof AlignmentType[keyof typeof AlignmentType] {
+  switch (a) {
+    case "left":    return AlignmentType.LEFT;
+    case "center":  return AlignmentType.CENTER;
+    case "right":   return AlignmentType.RIGHT;
+    case "justify": return AlignmentType.JUSTIFIED;
+  }
+}
 
 type DeptColor = "m" | "b" | "g";
 
@@ -368,11 +377,13 @@ export default function PosterEditor({
   previewLang,
   font,
   sizeScale,
+  bodyAlign,
   onBusy,
 }: {
   previewLang: Lang;
   font: FontOption;
   sizeScale: number;
+  bodyAlign: Align;
   onBusy: (s: string | null) => void;
 }) {
   const [data, setData] = useState<PosterData>(DEFAULTS);
@@ -884,7 +895,11 @@ export default function PosterEditor({
           <div className="origin-top scale-[0.65] -mb-[35%]">
             <div
               ref={previewLang === "ar" ? arRef : enRef}
-              style={{ ["--font-poster" as string]: `var(${font.cssVar})`, ["--fs" as string]: sizeScale }}
+              style={{
+              ["--font-poster" as string]: `var(${font.cssVar})`,
+              ["--fs" as string]: sizeScale,
+              ["--body-align" as string]: bodyAlign,
+            }}
             >
               <PosterPreview data={data} lang={previewLang} />
             </div>
@@ -893,7 +908,11 @@ export default function PosterEditor({
         <div style={{ position: "absolute", left: -99999, top: 0 }} aria-hidden>
           <div
             ref={previewLang === "ar" ? enRef : arRef}
-            style={{ ["--font-poster" as string]: `var(${font.cssVar})`, ["--fs" as string]: sizeScale }}
+            style={{
+              ["--font-poster" as string]: `var(${font.cssVar})`,
+              ["--fs" as string]: sizeScale,
+              ["--body-align" as string]: bodyAlign,
+            }}
           >
             <PosterPreview data={data} lang={previewLang === "ar" ? "en" : "ar"} />
           </div>
