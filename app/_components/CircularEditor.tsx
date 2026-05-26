@@ -12,7 +12,18 @@ import {
   TextRun,
   BorderStyle,
 } from "docx";
-import { Field, PosterFooter, PosterHeader, RowList, Section, TextField } from "./Shared";
+import {
+  BiField,
+  BiRowList,
+  BiTextField,
+  Field,
+  HideMap,
+  Lang,
+  LangHint,
+  PosterFooter,
+  PosterHeader,
+  Section,
+} from "./Shared";
 
 type CircularData = {
   refValue: string;
@@ -40,6 +51,7 @@ type CircularData = {
   docs_en: string[];
   phones: string;
   email: string;
+  hide: HideMap;
 };
 
 const DEFAULTS: CircularData = {
@@ -92,6 +104,7 @@ Thank you for your cooperation and your commitment to procedures that uphold smo
   ],
   phones: "5102 | 5126 | 5142 | 5113",
   email: "FINANCE@SQU.EDU.OM",
+  hide: {},
 };
 
 function DocsCol({ head, intro, items }: { head: string; intro: string; items: string[] }) {
@@ -109,8 +122,9 @@ function DocsCol({ head, intro, items }: { head: string; intro: string; items: s
   );
 }
 
-function CircularPreview({ data, lang }: { data: CircularData; lang: "ar" | "en" }) {
+function CircularPreview({ data, lang }: { data: CircularData; lang: Lang }) {
   const isAr = lang === "ar";
+  const hide = data.hide;
   const refLabel = isAr ? "رقم التعميم:" : "Circular No.:";
   const dateLabel = isAr ? "التاريخ:" : "Date:";
   const date = isAr ? data.date_ar : data.date_en;
@@ -124,37 +138,56 @@ function CircularPreview({ data, lang }: { data: CircularData; lang: "ar" | "en"
   const docsHead = isAr ? data.docsHead_ar : data.docsHead_en;
   const docsIntro = isAr ? data.docsIntro_ar : data.docsIntro_en;
   const docs = isAr ? data.docs_ar : data.docs_en;
+  const docsIntroVisible = !hide.docsIntro;
 
   const paragraphs = body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+
+  const showRefBar = !hide.refValue || !hide.date;
 
   return (
     <div className={`poster-canvas ${isAr ? "rtl" : "ltr"}`}>
       <PosterHeader />
 
-      <div className="pc-refbar">
-        <div className="cell">
-          <span className="lbl">{refLabel}</span>
-          <span className="val">{data.refValue}</span>
+      {showRefBar && (
+        <div className="pc-refbar">
+          {!hide.refValue ? (
+            <div className="cell">
+              <span className="lbl">{refLabel}</span>
+              <span className="val">{data.refValue}</span>
+            </div>
+          ) : (
+            <div />
+          )}
+          {!hide.date ? (
+            <div className="cell">
+              <span className="lbl">{dateLabel}</span>
+              <span className="val">{date}</span>
+            </div>
+          ) : (
+            <div />
+          )}
         </div>
-        <div className="cell">
-          <span className="lbl">{dateLabel}</span>
-          <span className="val">{date}</span>
+      )}
+
+      {(!hide.title || !hide.titleSub) && (
+        <div className="pc-title-wrap">
+          {!hide.title && <div className="pc-title-main">{title}</div>}
+          {!hide.titleSub && <div className="pc-title-sub">{titleSub}</div>}
         </div>
-      </div>
+      )}
 
-      <div className="pc-title-wrap">
-        <div className="pc-title-main">{title}</div>
-        <div className="pc-title-sub">{titleSub}</div>
-      </div>
-
-      <div className="pc-subject">
-        <div className="pc-subject-lbl">{subjectLabel}</div>
-        <div className="pc-subject-text">{subject}</div>
-      </div>
+      {!hide.subject && (
+        <div className="pc-subject">
+          <div className="pc-subject-lbl">{subjectLabel}</div>
+          <div className="pc-subject-text">{subject}</div>
+        </div>
+      )}
 
       <div className="pc-letter">
         <div className="pc-body-row">
-          {data.showDocs && isAr && <DocsCol head={docsHead} intro={docsIntro} items={docs} />}
+          {data.showDocs && isAr && (
+            <DocsCol head={docsHead} intro={docsIntroVisible ? docsIntro : ""} items={docs} />
+          )}
           <div className="pc-body-col">
             {paragraphs.map((p, i) => (
               <p key={i} className="pc-para">
@@ -171,7 +204,9 @@ function CircularPreview({ data, lang }: { data: CircularData; lang: "ar" | "en"
               </div>
             )}
           </div>
-          {data.showDocs && !isAr && <DocsCol head={docsHead} intro={docsIntro} items={docs} />}
+          {data.showDocs && !isAr && (
+            <DocsCol head={docsHead} intro={docsIntroVisible ? docsIntro : ""} items={docs} />
+          )}
         </div>
       </div>
 
@@ -179,10 +214,13 @@ function CircularPreview({ data, lang }: { data: CircularData; lang: "ar" | "en"
         phones={data.phones}
         email={data.email}
         rtl={isAr}
+        hidePhones={!!hide.phones}
+        hideEmail={!!hide.email}
+        hideMeta={!!hide.refValue && !!hide.date}
         meta={
           isAr
-            ? `رقم التعميم: ${data.refValue} | التاريخ: ${data.date_ar.replace("م", "").trim()}`
-            : `Circular No.: ${data.refValue} | Date: ${data.date_en}`
+            ? `${!hide.refValue ? `رقم التعميم: ${data.refValue}` : ""}${!hide.refValue && !hide.date ? " | " : ""}${!hide.date ? `التاريخ: ${data.date_ar.replace("م", "").trim()}` : ""}`
+            : `${!hide.refValue ? `Circular No.: ${data.refValue}` : ""}${!hide.refValue && !hide.date ? " | " : ""}${!hide.date ? `Date: ${data.date_en}` : ""}`
         }
       />
     </div>
@@ -193,7 +231,7 @@ export default function CircularEditor({
   previewLang,
   onBusy,
 }: {
-  previewLang: "ar" | "en";
+  previewLang: Lang;
   onBusy: (s: string | null) => void;
 }) {
   const [data, setData] = useState<CircularData>(DEFAULTS);
@@ -203,7 +241,10 @@ export default function CircularEditor({
   const update = <K extends keyof CircularData>(key: K, val: CircularData[K]) =>
     setData((d) => ({ ...d, [key]: val }));
 
-  async function downloadPng(lang: "ar" | "en") {
+  const toggleHide = (key: string) =>
+    setData((d) => ({ ...d, hide: { ...d.hide, [key]: !d.hide[key] } }));
+
+  async function downloadPng(lang: Lang) {
     const node = lang === "ar" ? arRef.current : enRef.current;
     if (!node) return;
     onBusy(`PNG ${lang.toUpperCase()}`);
@@ -229,6 +270,7 @@ export default function CircularEditor({
       const MAROON = "7A0020";
       const GOLD_DK = "A07828";
       const SUB = "555555";
+      const hide = data.hide;
 
       const arRun = (text: string, opts: { bold?: boolean; size?: number; color?: string } = {}) =>
         new TextRun({
@@ -266,32 +308,54 @@ export default function CircularEditor({
           alignment: AlignmentType.CENTER,
           spacing: { after: 100 },
         }),
-        new Paragraph({
-          children: [
-            arRun(`رقم التعميم: ${data.refValue}`, { bold: true, size: 11, color: MAROON }),
-            arRun("\t\t\t\t"),
-            arRun(`التاريخ: ${data.date_ar}`, { bold: true, size: 11, color: MAROON }),
-          ],
-          bidirectional: true,
-          alignment: AlignmentType.RIGHT,
-        }),
+        ...(!hide.refValue || !hide.date
+          ? [
+              new Paragraph({
+                children: [
+                  ...(!hide.refValue ? [arRun(`رقم التعميم: ${data.refValue}`, { bold: true, size: 11, color: MAROON })] : []),
+                  ...(!hide.refValue && !hide.date ? [arRun("\t\t\t\t")] : []),
+                  ...(!hide.date ? [arRun(`التاريخ: ${data.date_ar}`, { bold: true, size: 11, color: MAROON })] : []),
+                ],
+                bidirectional: true,
+                alignment: AlignmentType.RIGHT,
+              }),
+            ]
+          : []),
         new Paragraph({ children: [arRun("")] }),
-        new Paragraph({
-          children: [arRun(data.title_ar, { bold: true, size: 24, color: MAROON })],
-          bidirectional: true,
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 200 },
-        }),
+        ...(!hide.title
+          ? [
+              new Paragraph({
+                children: [arRun(data.title_ar, { bold: true, size: 24, color: MAROON })],
+                bidirectional: true,
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 200 },
+              }),
+            ]
+          : []),
+        ...(!hide.titleSub
+          ? [
+              new Paragraph({
+                children: [arRun(data.titleSub_ar, { size: 12, color: SUB })],
+                bidirectional: true,
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 200 },
+              }),
+            ]
+          : []),
         divider(),
-        new Paragraph({
-          children: [
-            arRun("الموضوع:  ", { bold: true, size: 13, color: GOLD_DK }),
-            arRun(data.subject_ar, { bold: true, size: 14, color: MAROON }),
-          ],
-          bidirectional: true,
-          alignment: AlignmentType.RIGHT,
-          spacing: { after: 240 },
-        }),
+        ...(!hide.subject
+          ? [
+              new Paragraph({
+                children: [
+                  arRun("الموضوع:  ", { bold: true, size: 13, color: GOLD_DK }),
+                  arRun(data.subject_ar, { bold: true, size: 14, color: MAROON }),
+                ],
+                bidirectional: true,
+                alignment: AlignmentType.RIGHT,
+                spacing: { after: 240 },
+              }),
+            ]
+          : []),
         ...arParagraphs.map(
           (p) =>
             new Paragraph({
@@ -323,7 +387,7 @@ export default function CircularEditor({
                 alignment: AlignmentType.RIGHT,
                 spacing: { after: 100 },
               }),
-              ...(data.docsIntro_ar
+              ...(data.docsIntro_ar && !hide.docsIntro
                 ? [
                     new Paragraph({
                       children: [arRun(data.docsIntro_ar, { size: 11, color: SUB })],
@@ -345,11 +409,22 @@ export default function CircularEditor({
           : []),
         new Paragraph({ children: [arRun("")] }),
         divider(),
-        new Paragraph({
-          children: [arRun(`للاستفسار: ${data.email}  |  ${data.phones}`, { size: 10, color: SUB })],
-          bidirectional: true,
-          alignment: AlignmentType.RIGHT,
-        }),
+        ...(!hide.phones || !hide.email
+          ? [
+              new Paragraph({
+                children: [
+                  arRun(
+                    `للاستفسار: ${[!hide.email ? data.email : "", !hide.phones ? data.phones : ""]
+                      .filter(Boolean)
+                      .join("  |  ")}`,
+                    { size: 10, color: SUB },
+                  ),
+                ],
+                bidirectional: true,
+                alignment: AlignmentType.RIGHT,
+              }),
+            ]
+          : []),
       ];
 
       const enChildren = [
@@ -358,29 +433,50 @@ export default function CircularEditor({
           alignment: AlignmentType.CENTER,
           spacing: { after: 100 },
         }),
-        new Paragraph({
-          children: [
-            enRun(`Circular No.: ${data.refValue}`, { bold: true, size: 11, color: MAROON }),
-            enRun("\t\t\t\t"),
-            enRun(`Date: ${data.date_en}`, { bold: true, size: 11, color: MAROON }),
-          ],
-          alignment: AlignmentType.LEFT,
-        }),
+        ...(!hide.refValue || !hide.date
+          ? [
+              new Paragraph({
+                children: [
+                  ...(!hide.refValue ? [enRun(`Circular No.: ${data.refValue}`, { bold: true, size: 11, color: MAROON })] : []),
+                  ...(!hide.refValue && !hide.date ? [enRun("\t\t\t\t")] : []),
+                  ...(!hide.date ? [enRun(`Date: ${data.date_en}`, { bold: true, size: 11, color: MAROON })] : []),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+            ]
+          : []),
         new Paragraph({ children: [enRun("")] }),
-        new Paragraph({
-          children: [enRun(data.title_en, { bold: true, size: 24, color: MAROON })],
-          alignment: AlignmentType.CENTER,
-          spacing: { after: 200 },
-        }),
+        ...(!hide.title
+          ? [
+              new Paragraph({
+                children: [enRun(data.title_en, { bold: true, size: 24, color: MAROON })],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 200 },
+              }),
+            ]
+          : []),
+        ...(!hide.titleSub
+          ? [
+              new Paragraph({
+                children: [enRun(data.titleSub_en, { size: 12, color: SUB })],
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 200 },
+              }),
+            ]
+          : []),
         divider(),
-        new Paragraph({
-          children: [
-            enRun("Subject:  ", { bold: true, size: 13, color: GOLD_DK }),
-            enRun(data.subject_en, { bold: true, size: 14, color: MAROON }),
-          ],
-          alignment: AlignmentType.LEFT,
-          spacing: { after: 240 },
-        }),
+        ...(!hide.subject
+          ? [
+              new Paragraph({
+                children: [
+                  enRun("Subject:  ", { bold: true, size: 13, color: GOLD_DK }),
+                  enRun(data.subject_en, { bold: true, size: 14, color: MAROON }),
+                ],
+                alignment: AlignmentType.LEFT,
+                spacing: { after: 240 },
+              }),
+            ]
+          : []),
         ...enParagraphs.map(
           (p) =>
             new Paragraph({
@@ -409,7 +505,7 @@ export default function CircularEditor({
                 alignment: AlignmentType.LEFT,
                 spacing: { after: 100 },
               }),
-              ...(data.docsIntro_en
+              ...(data.docsIntro_en && !hide.docsIntro
                 ? [
                     new Paragraph({
                       children: [enRun(data.docsIntro_en, { size: 11, color: SUB })],
@@ -429,10 +525,21 @@ export default function CircularEditor({
           : []),
         new Paragraph({ children: [enRun("")] }),
         divider(),
-        new Paragraph({
-          children: [enRun(`For inquiries: ${data.email}  |  ${data.phones}`, { size: 10, color: SUB })],
-          alignment: AlignmentType.LEFT,
-        }),
+        ...(!hide.phones || !hide.email
+          ? [
+              new Paragraph({
+                children: [
+                  enRun(
+                    `For inquiries: ${[!hide.email ? data.email : "", !hide.phones ? data.phones : ""]
+                      .filter(Boolean)
+                      .join("  |  ")}`,
+                    { size: 10, color: SUB },
+                  ),
+                ],
+                alignment: AlignmentType.LEFT,
+              }),
+            ]
+          : []),
       ];
 
       const doc = new Document({
@@ -479,59 +586,166 @@ export default function CircularEditor({
           </button>
         </div>
 
+        <LangHint lang={previewLang} />
+
         <Section title="مرجع التعميم · Reference">
-          <Field label="Ref. number" value={data.refValue} onChange={(v) => update("refValue", v)} />
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="التاريخ (AR)" value={data.date_ar} onChange={(v) => update("date_ar", v)} dir="rtl" />
-            <Field label="Date (EN)" value={data.date_en} onChange={(v) => update("date_en", v)} />
-          </div>
+          <Field
+            label="Ref. number"
+            value={data.refValue}
+            onChange={(v) => update("refValue", v)}
+            hideKey="refValue"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
+          <BiField
+            lang={previewLang}
+            labelAr="التاريخ"
+            labelEn="Date"
+            valueAr={data.date_ar}
+            valueEn={data.date_en}
+            onChangeAr={(v) => update("date_ar", v)}
+            onChangeEn={(v) => update("date_en", v)}
+            hideKey="date"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
         </Section>
 
         <Section title="العنوان · Title">
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="عنوان (AR)" value={data.title_ar} onChange={(v) => update("title_ar", v)} dir="rtl" />
-            <Field label="Title (EN)" value={data.title_en} onChange={(v) => update("title_en", v)} />
-          </div>
-          <Field label="عنوان فرعي (AR)" value={data.titleSub_ar} onChange={(v) => update("titleSub_ar", v)} dir="rtl" />
-          <Field label="Subtitle (EN)" value={data.titleSub_en} onChange={(v) => update("titleSub_en", v)} />
+          <BiField
+            lang={previewLang}
+            labelAr="عنوان"
+            labelEn="Title"
+            valueAr={data.title_ar}
+            valueEn={data.title_en}
+            onChangeAr={(v) => update("title_ar", v)}
+            onChangeEn={(v) => update("title_en", v)}
+            hideKey="title"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
+          <BiField
+            lang={previewLang}
+            labelAr="عنوان فرعي"
+            labelEn="Subtitle"
+            valueAr={data.titleSub_ar}
+            valueEn={data.titleSub_en}
+            onChangeAr={(v) => update("titleSub_ar", v)}
+            onChangeEn={(v) => update("titleSub_en", v)}
+            hideKey="titleSub"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
         </Section>
 
         <Section title="الموضوع · Subject">
-          <TextField label="الموضوع (AR)" value={data.subject_ar} onChange={(v) => update("subject_ar", v)} dir="rtl" rows={2} />
-          <TextField label="Subject (EN)" value={data.subject_en} onChange={(v) => update("subject_en", v)} rows={2} />
+          <BiTextField
+            lang={previewLang}
+            labelAr="الموضوع"
+            labelEn="Subject"
+            valueAr={data.subject_ar}
+            valueEn={data.subject_en}
+            onChangeAr={(v) => update("subject_ar", v)}
+            onChangeEn={(v) => update("subject_en", v)}
+            rows={2}
+            hideKey="subject"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
         </Section>
 
         <Section
           title="النص · Body"
-          subtitle="افصل الفقرات بسطر فارغ · Separate paragraphs with a blank line"
+          subtitle={
+            previewLang === "ar"
+              ? "افصل الفقرات بسطر فارغ"
+              : "Separate paragraphs with a blank line"
+          }
         >
-          <TextField label="النص (AR)" value={data.body_ar} onChange={(v) => update("body_ar", v)} dir="rtl" rows={10} />
-          <TextField label="Body (EN)" value={data.body_en} onChange={(v) => update("body_en", v)} rows={10} />
+          <BiTextField
+            lang={previewLang}
+            labelAr="النص"
+            labelEn="Body"
+            valueAr={data.body_ar}
+            valueEn={data.body_en}
+            onChangeAr={(v) => update("body_ar", v)}
+            onChangeEn={(v) => update("body_en", v)}
+            rows={10}
+          />
         </Section>
 
         <Section title="ملاحظة · Note box" toggle={{ on: data.showNote, set: (v) => update("showNote", v) }}>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="عنوان (AR)" value={data.noteLabel_ar} onChange={(v) => update("noteLabel_ar", v)} dir="rtl" />
-            <Field label="Label (EN)" value={data.noteLabel_en} onChange={(v) => update("noteLabel_en", v)} />
-          </div>
-          <TextField label="نص الملاحظة (AR)" value={data.note_ar} onChange={(v) => update("note_ar", v)} dir="rtl" rows={4} />
-          <TextField label="Note (EN)" value={data.note_en} onChange={(v) => update("note_en", v)} rows={4} />
+          <BiField
+            lang={previewLang}
+            labelAr="عنوان الملاحظة"
+            labelEn="Note label"
+            valueAr={data.noteLabel_ar}
+            valueEn={data.noteLabel_en}
+            onChangeAr={(v) => update("noteLabel_ar", v)}
+            onChangeEn={(v) => update("noteLabel_en", v)}
+          />
+          <BiTextField
+            lang={previewLang}
+            labelAr="نص الملاحظة"
+            labelEn="Note text"
+            valueAr={data.note_ar}
+            valueEn={data.note_en}
+            onChangeAr={(v) => update("note_ar", v)}
+            onChangeEn={(v) => update("note_en", v)}
+            rows={4}
+          />
         </Section>
 
         <Section title="المؤيدات · Supporting documents" toggle={{ on: data.showDocs, set: (v) => update("showDocs", v) }}>
-          <div className="grid grid-cols-2 gap-2">
-            <Field label="عنوان العمود (AR)" value={data.docsHead_ar} onChange={(v) => update("docsHead_ar", v)} dir="rtl" />
-            <Field label="Column head (EN)" value={data.docsHead_en} onChange={(v) => update("docsHead_en", v)} />
-          </div>
-          <Field label="مقدمة (AR)" value={data.docsIntro_ar} onChange={(v) => update("docsIntro_ar", v)} dir="rtl" />
-          <Field label="Intro (EN)" value={data.docsIntro_en} onChange={(v) => update("docsIntro_en", v)} />
-          <RowList label="عناصر (AR)" items={data.docs_ar} onChange={(items) => update("docs_ar", items)} dir="rtl" />
-          <RowList label="Items (EN)" items={data.docs_en} onChange={(items) => update("docs_en", items)} />
+          <BiField
+            lang={previewLang}
+            labelAr="عنوان العمود"
+            labelEn="Column heading"
+            valueAr={data.docsHead_ar}
+            valueEn={data.docsHead_en}
+            onChangeAr={(v) => update("docsHead_ar", v)}
+            onChangeEn={(v) => update("docsHead_en", v)}
+          />
+          <BiField
+            lang={previewLang}
+            labelAr="مقدمة"
+            labelEn="Intro"
+            valueAr={data.docsIntro_ar}
+            valueEn={data.docsIntro_en}
+            onChangeAr={(v) => update("docsIntro_ar", v)}
+            onChangeEn={(v) => update("docsIntro_en", v)}
+            hideKey="docsIntro"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
+          <BiRowList
+            lang={previewLang}
+            labelAr="عناصر"
+            labelEn="Items"
+            itemsAr={data.docs_ar}
+            itemsEn={data.docs_en}
+            onChangeAr={(items) => update("docs_ar", items)}
+            onChangeEn={(items) => update("docs_en", items)}
+          />
         </Section>
 
         <Section title="التذييل · Footer">
-          <Field label="الهواتف · Phones" value={data.phones} onChange={(v) => update("phones", v)} />
-          <Field label="البريد · Email" value={data.email} onChange={(v) => update("email", v)} />
+          <Field
+            label={previewLang === "ar" ? "الهواتف" : "Phones"}
+            value={data.phones}
+            onChange={(v) => update("phones", v)}
+            hideKey="phones"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
+          <Field
+            label={previewLang === "ar" ? "البريد" : "Email"}
+            value={data.email}
+            onChange={(v) => update("email", v)}
+            hideKey="email"
+            hide={data.hide}
+            onHideToggle={toggleHide}
+          />
         </Section>
       </aside>
 

@@ -1,6 +1,9 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+
+export type Lang = "ar" | "en";
+export type HideMap = Record<string, boolean>;
 
 export const TopStrip = () => (
   <div className="pc-strip">
@@ -59,25 +62,43 @@ export function PosterFooter({
   email,
   meta,
   rtl,
+  hidePhones,
+  hideEmail,
+  hideMeta,
 }: {
   phones: string;
   email: string;
   meta: string;
   rtl: boolean;
+  hidePhones?: boolean;
+  hideEmail?: boolean;
+  hideMeta?: boolean;
 }) {
   return (
     <div className="pc-footer">
-      <div className="pc-fi">
-        <div className="pc-ficon">☎</div>
-        <span>{phones}</span>
-      </div>
-      <div className="pc-fmeta" style={{ direction: rtl ? "rtl" : "ltr" }}>
-        {meta}
-      </div>
-      <div className="pc-fi">
-        <span>{email}</span>
-        <div className="pc-ficon">✉</div>
-      </div>
+      {!hidePhones ? (
+        <div className="pc-fi">
+          <div className="pc-ficon">☎</div>
+          <span>{phones}</span>
+        </div>
+      ) : (
+        <div />
+      )}
+      {!hideMeta ? (
+        <div className="pc-fmeta" style={{ direction: rtl ? "rtl" : "ltr" }}>
+          {meta}
+        </div>
+      ) : (
+        <div />
+      )}
+      {!hideEmail ? (
+        <div className="pc-fi">
+          <span>{email}</span>
+          <div className="pc-ficon">✉</div>
+        </div>
+      ) : (
+        <div />
+      )}
     </div>
   );
 }
@@ -117,26 +138,86 @@ export function Section({
   );
 }
 
+function HideButton({
+  hidden,
+  onToggle,
+}: {
+  hidden: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      title={hidden ? "Currently hidden from poster — click to show" : "Hide from poster"}
+      className={`p-0.5 rounded transition-colors ${
+        hidden ? "text-[#7a0020] bg-[#7a0020]/10" : "text-neutral-400 hover:text-[#7a0020]"
+      }`}
+    >
+      {hidden ? <EyeOff size={12} /> : <Eye size={12} />}
+    </button>
+  );
+}
+
+function FieldLabel({
+  label,
+  hideKey,
+  hide,
+  onHideToggle,
+}: {
+  label: string;
+  hideKey?: string;
+  hide?: HideMap;
+  onHideToggle?: (key: string) => void;
+}) {
+  const isHidden = hideKey && hide ? !!hide[hideKey] : false;
+  return (
+    <div className="flex items-center justify-between gap-2 mb-0.5">
+      <span
+        className={`text-[10px] font-medium ${
+          isHidden ? "text-neutral-400 line-through" : "text-neutral-500"
+        }`}
+      >
+        {label}
+      </span>
+      {hideKey && onHideToggle && (
+        <HideButton hidden={isHidden} onToggle={() => onHideToggle(hideKey)} />
+      )}
+    </div>
+  );
+}
+
 export function Field({
   label,
   value,
   onChange,
   dir,
+  hideKey,
+  hide,
+  onHideToggle,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   dir?: "rtl" | "ltr";
+  hideKey?: string;
+  hide?: HideMap;
+  onHideToggle?: (key: string) => void;
 }) {
+  const isHidden = hideKey && hide ? !!hide[hideKey] : false;
   return (
     <label className="block">
-      <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
+      <FieldLabel label={label} hideKey={hideKey} hide={hide} onHideToggle={onHideToggle} />
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         dir={dir}
-        className="w-full mt-0.5 px-2 py-1.5 text-sm border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none focus:ring-1 focus:ring-[#7a0020]"
+        className={`w-full px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#7a0020] ${
+          isHidden
+            ? "border-neutral-200 bg-neutral-50 text-neutral-400 italic"
+            : "border-neutral-300 focus:border-[#7a0020]"
+        }`}
       />
     </label>
   );
@@ -148,22 +229,33 @@ export function TextField({
   onChange,
   dir,
   rows = 4,
+  hideKey,
+  hide,
+  onHideToggle,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   dir?: "rtl" | "ltr";
   rows?: number;
+  hideKey?: string;
+  hide?: HideMap;
+  onHideToggle?: (key: string) => void;
 }) {
+  const isHidden = hideKey && hide ? !!hide[hideKey] : false;
   return (
     <label className="block">
-      <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
+      <FieldLabel label={label} hideKey={hideKey} hide={hide} onHideToggle={onHideToggle} />
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         dir={dir}
         rows={rows}
-        className="w-full mt-0.5 px-2 py-1.5 text-sm border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none focus:ring-1 focus:ring-[#7a0020] leading-relaxed"
+        className={`w-full px-2 py-1.5 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-[#7a0020] leading-relaxed ${
+          isHidden
+            ? "border-neutral-200 bg-neutral-50 text-neutral-400 italic"
+            : "border-neutral-300 focus:border-[#7a0020]"
+        }`}
       />
     </label>
   );
@@ -174,23 +266,41 @@ export function RowList({
   items,
   onChange,
   dir,
+  hideKey,
+  hide,
+  onHideToggle,
 }: {
   label: string;
   items: string[];
   onChange: (items: string[]) => void;
   dir?: "rtl" | "ltr";
+  hideKey?: string;
+  hide?: HideMap;
+  onHideToggle?: (key: string) => void;
 }) {
+  const isHidden = hideKey && hide ? !!hide[hideKey] : false;
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
-        <button
-          onClick={() => onChange([...items, ""])}
-          className="text-[10px] text-[#7a0020] font-bold flex items-center gap-1 hover:underline"
-          type="button"
+      <div className="flex items-center justify-between mb-1 gap-2">
+        <span
+          className={`text-[10px] font-medium ${
+            isHidden ? "text-neutral-400 line-through" : "text-neutral-500"
+          }`}
         >
-          <Plus size={12} /> add
-        </button>
+          {label}
+        </span>
+        <div className="flex items-center gap-1.5">
+          {hideKey && onHideToggle && (
+            <HideButton hidden={isHidden} onToggle={() => onHideToggle(hideKey)} />
+          )}
+          <button
+            onClick={() => onChange([...items, ""])}
+            className="text-[10px] text-[#7a0020] font-bold flex items-center gap-1 hover:underline"
+            type="button"
+          >
+            <Plus size={12} /> add
+          </button>
+        </div>
       </div>
       <div className="space-y-1">
         {items.map((item, i) => (
@@ -205,7 +315,11 @@ export function RowList({
                 onChange(next);
               }}
               dir={dir}
-              className="flex-1 px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none"
+              className={`flex-1 px-2 py-1 text-xs border rounded focus:outline-none ${
+                isHidden
+                  ? "border-neutral-200 bg-neutral-50 text-neutral-400 italic"
+                  : "border-neutral-300 focus:border-[#7a0020]"
+              }`}
             />
             <button
               onClick={() => onChange(items.filter((_, idx) => idx !== i))}
@@ -218,6 +332,134 @@ export function RowList({
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Bilingual field — shows only the active language's input.
+ * The other language is hidden but its value remains in state.
+ */
+export function BiField({
+  labelAr,
+  labelEn,
+  valueAr,
+  valueEn,
+  onChangeAr,
+  onChangeEn,
+  lang,
+  hideKey,
+  hide,
+  onHideToggle,
+}: {
+  labelAr: string;
+  labelEn: string;
+  valueAr: string;
+  valueEn: string;
+  onChangeAr: (v: string) => void;
+  onChangeEn: (v: string) => void;
+  lang: Lang;
+  hideKey?: string;
+  hide?: HideMap;
+  onHideToggle?: (key: string) => void;
+}) {
+  const isAr = lang === "ar";
+  return (
+    <Field
+      label={isAr ? labelAr : labelEn}
+      value={isAr ? valueAr : valueEn}
+      onChange={isAr ? onChangeAr : onChangeEn}
+      dir={isAr ? "rtl" : "ltr"}
+      hideKey={hideKey}
+      hide={hide}
+      onHideToggle={onHideToggle}
+    />
+  );
+}
+
+export function BiTextField({
+  labelAr,
+  labelEn,
+  valueAr,
+  valueEn,
+  onChangeAr,
+  onChangeEn,
+  lang,
+  rows = 4,
+  hideKey,
+  hide,
+  onHideToggle,
+}: {
+  labelAr: string;
+  labelEn: string;
+  valueAr: string;
+  valueEn: string;
+  onChangeAr: (v: string) => void;
+  onChangeEn: (v: string) => void;
+  lang: Lang;
+  rows?: number;
+  hideKey?: string;
+  hide?: HideMap;
+  onHideToggle?: (key: string) => void;
+}) {
+  const isAr = lang === "ar";
+  return (
+    <TextField
+      label={isAr ? labelAr : labelEn}
+      value={isAr ? valueAr : valueEn}
+      onChange={isAr ? onChangeAr : onChangeEn}
+      dir={isAr ? "rtl" : "ltr"}
+      rows={rows}
+      hideKey={hideKey}
+      hide={hide}
+      onHideToggle={onHideToggle}
+    />
+  );
+}
+
+export function BiRowList({
+  labelAr,
+  labelEn,
+  itemsAr,
+  itemsEn,
+  onChangeAr,
+  onChangeEn,
+  lang,
+  hideKey,
+  hide,
+  onHideToggle,
+}: {
+  labelAr: string;
+  labelEn: string;
+  itemsAr: string[];
+  itemsEn: string[];
+  onChangeAr: (items: string[]) => void;
+  onChangeEn: (items: string[]) => void;
+  lang: Lang;
+  hideKey?: string;
+  hide?: HideMap;
+  onHideToggle?: (key: string) => void;
+}) {
+  const isAr = lang === "ar";
+  return (
+    <RowList
+      label={isAr ? labelAr : labelEn}
+      items={isAr ? itemsAr : itemsEn}
+      onChange={isAr ? onChangeAr : onChangeEn}
+      dir={isAr ? "rtl" : "ltr"}
+      hideKey={hideKey}
+      hide={hide}
+      onHideToggle={onHideToggle}
+    />
+  );
+}
+
+export function LangHint({ lang }: { lang: Lang }) {
+  return (
+    <div className="text-[10px] text-neutral-400 italic px-1 -mt-2">
+      {lang === "ar"
+        ? "تعرض الحقول العربية فقط · بدّل اللغة من الأعلى للعرض الإنجليزي"
+        : "English fields only · switch language at top to edit Arabic"}
     </div>
   );
 }
