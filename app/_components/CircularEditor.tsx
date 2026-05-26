@@ -24,6 +24,7 @@ import {
   PosterHeader,
   Section,
 } from "./Shared";
+import type { FontOption } from "./fonts";
 
 type CircularData = {
   refValue: string;
@@ -229,9 +230,13 @@ function CircularPreview({ data, lang }: { data: CircularData; lang: Lang }) {
 
 export default function CircularEditor({
   previewLang,
+  font,
+  sizeScale,
   onBusy,
 }: {
   previewLang: Lang;
+  font: FontOption;
+  sizeScale: number;
   onBusy: (s: string | null) => void;
 }) {
   const [data, setData] = useState<CircularData>(DEFAULTS);
@@ -276,9 +281,9 @@ export default function CircularEditor({
         new TextRun({
           text,
           bold: opts.bold,
-          size: (opts.size ?? 12) * 2,
+          size: Math.round((opts.size ?? 12) * 2 * sizeScale),
           color: opts.color,
-          font: "Cairo",
+          font: font.docxFamily,
           rightToLeft: true,
         });
 
@@ -286,9 +291,9 @@ export default function CircularEditor({
         new TextRun({
           text,
           bold: opts.bold,
-          size: (opts.size ?? 12) * 2,
+          size: Math.round((opts.size ?? 12) * 2 * sizeScale),
           color: opts.color,
-          font: "Calibri",
+          font: font.docxFamily,
         });
 
       const divider = () =>
@@ -752,16 +757,22 @@ export default function CircularEditor({
       <main className="overflow-auto p-6 bg-neutral-200 relative">
         <div className="flex flex-col items-center gap-4">
           <div className="text-[11px] text-neutral-500 tracking-widest uppercase">
-            Live preview · {previewLang === "ar" ? "Arabic" : "English"} · displayed at 65%
+            Live preview · {previewLang === "ar" ? "Arabic" : "English"} · {font.label} · {Math.round(sizeScale * 100)}% · displayed at 65%
           </div>
           <div className="origin-top scale-[0.65] -mb-[35%]">
-            <div ref={previewLang === "ar" ? arRef : enRef}>
+            <div
+              ref={previewLang === "ar" ? arRef : enRef}
+              style={{ ["--font-poster" as string]: `var(${font.cssVar})`, ["--fs" as string]: sizeScale }}
+            >
               <CircularPreview data={data} lang={previewLang} />
             </div>
           </div>
         </div>
         <div style={{ position: "absolute", left: -99999, top: 0 }} aria-hidden>
-          <div ref={previewLang === "ar" ? enRef : arRef}>
+          <div
+            ref={previewLang === "ar" ? enRef : arRef}
+            style={{ ["--font-poster" as string]: `var(${font.cssVar})`, ["--fs" as string]: sizeScale }}
+          >
             <CircularPreview data={data} lang={previewLang === "ar" ? "en" : "ar"} />
           </div>
         </div>

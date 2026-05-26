@@ -18,6 +18,14 @@
 
 @theme inline {
   --font-cairo: var(--font-cairo);
+  --font-tajawal: var(--font-tajawal);
+  --font-plex: var(--font-plex);
+  --font-readex: var(--font-readex);
+  --font-amiri: var(--font-amiri);
+  --font-messiri: var(--font-messiri);
+  --font-reem: var(--font-reem);
+  --font-markazi: var(--font-markazi);
+  --font-almarai: var(--font-almarai);
   --font-playfair: var(--font-playfair);
 }
 
@@ -27,11 +35,13 @@ body {
 
 /* ═══════════════════════════════════════════════════════════════
    POSTER PREVIEW — locked DNA from the original SQU templates
+   --font-poster = active font family (set via inline style from React)
+   --fs          = font scale multiplier (default 1, e.g. 0.92 / 1.1 / 1.22)
    ═══════════════════════════════════════════════════════════════ */
 .poster-canvas {
   width: 1000px;
   background: var(--bg);
-  font-family: var(--font-cairo), 'Tahoma', sans-serif;
+  font-family: var(--font-poster, var(--font-cairo)), 'Tahoma', sans-serif;
   color: var(--text);
 }
 .poster-canvas.rtl { direction: rtl; }
@@ -58,12 +68,12 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   padding: 6px 32px;
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  font-size: calc(12px * var(--fs, 1));
 }
 .pc-refbar .cell { display: flex; gap: 8px; align-items: baseline; color: var(--maroon-d); }
-.pc-refbar .lbl  { color: var(--gold-dk); font-weight: 800; letter-spacing: 0.5px; font-size: 11px; }
+.pc-refbar .lbl  { color: var(--gold-dk); font-weight: 800; letter-spacing: 0.5px; font-size: calc(11px * var(--fs, 1)); }
 .pc-refbar .val  { font-weight: 700; }
-.poster-canvas.ltr .pc-refbar .lbl { letter-spacing: 1px; text-transform: uppercase; font-size: 10.5px; }
+.poster-canvas.ltr .pc-refbar .lbl { letter-spacing: 1px; text-transform: uppercase; font-size: calc(10.5px * var(--fs, 1)); }
 
 /* ── TITLE ── */
 .pc-title-wrap {
@@ -71,17 +81,16 @@ body {
   padding: 4px 30px 6px;
 }
 .pc-title-main {
-  font-family: var(--font-cairo), sans-serif;
-  font-size: 32px; font-weight: 900; color: var(--maroon-d);
+  font-family: var(--font-poster, var(--font-cairo)), sans-serif;
+  font-size: calc(32px * var(--fs, 1)); font-weight: 900; color: var(--maroon-d);
   line-height: 1.1; letter-spacing: 1px;
   display: inline-block;
 }
 .poster-canvas.ltr .pc-title-main {
-  font-family: var(--font-playfair), serif;
-  font-size: 36px; letter-spacing: 4px; text-transform: uppercase;
+  font-size: calc(36px * var(--fs, 1)); letter-spacing: 4px; text-transform: uppercase;
 }
 .pc-title-sub {
-  font-size: 10.5px; font-weight: 700; color: var(--gold-dk);
+  font-size: calc(10.5px * var(--fs, 1)); font-weight: 700; color: var(--gold-dk);
   letter-spacing: 4px; margin-top: 4px;
 }
 .poster-canvas.ltr .pc-title-sub { text-transform: uppercase; }
@@ -95,7 +104,7 @@ body {
   border-bottom: 3px solid var(--gold);
 }
 .pc-subject-lbl {
-  color: var(--gold-lt); font-size: 11px; font-weight: 800;
+  color: var(--gold-lt); font-size: calc(11px * var(--fs, 1)); font-weight: 800;
   letter-spacing: 2px; flex-shrink: 0;
 }
 .poster-canvas.rtl .pc-subject-lbl { padding-left: 16px; border-left: 1px solid rgba(201,168,76,0.4); }
@@ -104,10 +113,10 @@ body {
   letter-spacing: 2.5px; text-transform: uppercase;
 }
 .pc-subject-text {
-  color: var(--white); font-size: 17px; font-weight: 800;
+  color: var(--white); font-size: calc(17px * var(--fs, 1)); font-weight: 800;
   line-height: 1.5; flex: 1;
 }
-.poster-canvas.ltr .pc-subject-text { font-size: 16.5px; line-height: 1.45; }
+.poster-canvas.ltr .pc-subject-text { font-size: calc(16.5px * var(--fs, 1)); line-height: 1.45; }
 
 /* ── LETTER BODY ── */
 .pc-letter {
@@ -136,41 +145,41 @@ body {
 }
 .pc-docs-head {
   background: linear-gradient(90deg, var(--maroon-d), var(--maroon) 50%, var(--maroon-d));
-  color: var(--white); font-size: 14px; font-weight: 800;
+  color: var(--white); font-size: calc(14px * var(--fs, 1)); font-weight: 800;
   padding: 11px 13px; text-align: center;
   letter-spacing: 0.5px;
   border-bottom: 2px solid var(--gold);
 }
-.poster-canvas.ltr .pc-docs-head { font-size: 12.5px; letter-spacing: 1.5px; text-transform: uppercase; }
+.poster-canvas.ltr .pc-docs-head { font-size: calc(12.5px * var(--fs, 1)); letter-spacing: 1.5px; text-transform: uppercase; }
 .pc-docs-intro {
-  font-size: 10.5px; color: var(--sub); line-height: 1.7;
+  font-size: calc(10.5px * var(--fs, 1)); color: var(--sub); line-height: 1.7;
   padding: 8px 12px; background: #fef8f9;
   border-bottom: 1px solid var(--border);
   text-align: center;
 }
 .pc-doc-row {
   display: flex; align-items: center; gap: 9px; padding: 9px 11px;
-  font-size: 12px; border-bottom: 1px solid #f0e4e6;
+  font-size: calc(12px * var(--fs, 1)); border-bottom: 1px solid #f0e4e6;
   color: var(--text); line-height: 1.45;
 }
-.poster-canvas.ltr .pc-doc-row { font-size: 11.5px; }
+.poster-canvas.ltr .pc-doc-row { font-size: calc(11.5px * var(--fs, 1)); }
 .pc-doc-row:last-child { border-bottom: none; }
 .pc-doc-row:nth-child(odd)  { background: #fdf5f7; }
 .pc-doc-row:nth-child(even) { background: var(--white); }
 .pc-dn {
   width: 22px; height: 22px; background: var(--maroon); color: var(--white);
-  border-radius: 50%; font-size: 10.5px; font-weight: 800;
+  border-radius: 50%; font-size: calc(10.5px * var(--fs, 1)); font-weight: 800;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
   box-shadow: 0 0 0 2px var(--gold);
 }
 
 /* ── PARAGRAPHS ── */
 .pc-para {
-  font-size: 14.5px; font-weight: 500; color: var(--text);
+  font-size: calc(14.5px * var(--fs, 1)); font-weight: 500; color: var(--text);
   line-height: 2; margin-bottom: 14px; text-align: justify;
   white-space: pre-wrap;
 }
-.poster-canvas.ltr .pc-para { font-size: 14px; line-height: 1.95; }
+.poster-canvas.ltr .pc-para { font-size: calc(14px * var(--fs, 1)); line-height: 1.95; }
 
 /* ── NOTE BOX (Wusool-style) ── */
 .pc-note {
@@ -185,23 +194,23 @@ body {
 .pc-note-icon {
   width: 36px; height: 36px; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, var(--maroon-l), var(--maroon-d));
-  color: var(--gold-lt); font-size: 18px; font-weight: 900;
+  color: var(--gold-lt); font-size: calc(18px * var(--fs, 1)); font-weight: 900;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
   box-shadow: 0 0 0 2.5px var(--gold), 0 2px 6px rgba(0,0,0,0.18);
 }
 .pc-note-body {
-  font-size: 13.5px; color: var(--maroon-d); font-weight: 600;
+  font-size: calc(13.5px * var(--fs, 1)); color: var(--maroon-d); font-weight: 600;
   line-height: 1.85; padding-top: 4px;
   white-space: pre-wrap;
 }
-.poster-canvas.ltr .pc-note-body { font-size: 13px; line-height: 1.75; }
+.poster-canvas.ltr .pc-note-body { font-size: calc(13px * var(--fs, 1)); line-height: 1.75; }
 .pc-note-lbl {
   display: block; font-weight: 800; color: var(--maroon-d);
-  font-size: 12.5px; letter-spacing: 0.4px;
+  font-size: calc(12.5px * var(--fs, 1)); letter-spacing: 0.4px;
   margin-bottom: 4px;
 }
-.poster-canvas.ltr .pc-note-lbl { font-size: 12px; letter-spacing: 0.6px; text-transform: uppercase; }
+.poster-canvas.ltr .pc-note-lbl { font-size: calc(12px * var(--fs, 1)); letter-spacing: 0.6px; text-transform: uppercase; }
 
 /* ═══════════════════════════════════════════════════════════════
    POSTER (procedure) — info bar + steps timeline + color legend
@@ -222,9 +231,9 @@ body {
 .poster-canvas.rtl .pcp-info-cell:last-child { border-left: none; }
 .poster-canvas.ltr .pcp-info-cell { border-right: 1px solid rgba(255,255,255,0.1); }
 .poster-canvas.ltr .pcp-info-cell:last-child { border-right: none; }
-.pcp-info-lbl { font-size: 9.5px; color: var(--gold-lt); font-weight: 700; letter-spacing: 0.8px; }
-.pcp-info-val { font-size: 14.5px; color: var(--white); font-weight: 700; line-height: 1.3; }
-.pcp-info-sub { font-size: 10.5px; color: rgba(255,255,255,0.55); margin-top: 1px; }
+.pcp-info-lbl { font-size: calc(9.5px * var(--fs, 1)); color: var(--gold-lt); font-weight: 700; letter-spacing: 0.8px; }
+.pcp-info-val { font-size: calc(14.5px * var(--fs, 1)); color: var(--white); font-weight: 700; line-height: 1.3; }
+.pcp-info-sub { font-size: calc(10.5px * var(--fs, 1)); color: rgba(255,255,255,0.55); margin-top: 1px; }
 
 /* poster body — two columns */
 .pcp-body {
@@ -243,17 +252,17 @@ body {
 }
 .pcp-docs-head {
   background: var(--maroon); color: var(--white);
-  font-size: 13px; font-weight: 700;
+  font-size: calc(13px * var(--fs, 1)); font-weight: 700;
   padding: 11px 13px; text-align: center;
 }
 .pcp-docs-intro {
-  font-size: 10.5px; color: var(--sub); line-height: 1.75;
+  font-size: calc(10.5px * var(--fs, 1)); color: var(--sub); line-height: 1.75;
   padding: 8px 12px; background: #fef8f9;
   border-bottom: 2px solid var(--gold);
 }
 .pcp-doc-row {
   display: flex; align-items: center; gap: 9px; padding: 8px 11px;
-  font-size: 12.5px; border-bottom: 1px solid #f0e4e6;
+  font-size: calc(12.5px * var(--fs, 1)); border-bottom: 1px solid #f0e4e6;
   line-height: 1.45;
 }
 .pcp-doc-row:last-child { border-bottom: none; }
@@ -261,7 +270,7 @@ body {
 .pcp-doc-row:nth-child(even) { background: var(--white); }
 .pcp-dn {
   width: 22px; height: 22px; background: var(--maroon); color: var(--white);
-  border-radius: 50%; font-size: 11px; font-weight: 700;
+  border-radius: 50%; font-size: calc(11px * var(--fs, 1)); font-weight: 700;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
 
@@ -269,7 +278,7 @@ body {
 .pcp-steps-col { flex: 1; min-width: 0; }
 .pcp-steps-head {
   background: linear-gradient(90deg, var(--gold-dk), var(--gold-lt), var(--gold-dk));
-  color: var(--maroon-d); font-size: 14px; font-weight: 800;
+  color: var(--maroon-d); font-size: calc(14px * var(--fs, 1)); font-weight: 800;
   padding: 11px 14px; border-radius: 10px 10px 0 0; text-align: center;
 }
 .pcp-timeline {
@@ -283,7 +292,7 @@ body {
 /* gold-ringed node, colored by department */
 .pcp-node {
   width: 34px; height: 34px; border-radius: 50%;
-  font-size: 14px; font-weight: 800; color: var(--white);
+  font-size: calc(14px * var(--fs, 1)); font-weight: 800; color: var(--white);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; z-index: 1;
   box-shadow: 0 0 0 3px var(--gold), 0 3px 10px rgba(0,0,0,0.22);
@@ -315,8 +324,8 @@ body {
 .pcp-step-card.last { margin-bottom: 0; }
 .pcp-step-item:last-child .pcp-step-card { margin-bottom: 0; }
 
-.pcp-st { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.45; }
-.pcp-sd { font-size: 11px; color: var(--sub); margin-top: 3px; line-height: 1.5; }
+.pcp-st { font-size: calc(13px * var(--fs, 1)); font-weight: 700; color: var(--text); line-height: 1.45; }
+.pcp-sd { font-size: calc(11px * var(--fs, 1)); color: var(--sub); margin-top: 3px; line-height: 1.5; }
 
 /* color legend */
 .pcp-legend {
@@ -328,7 +337,7 @@ body {
   margin: 0 14px;
   border-radius: 0 0 10px 10px;
 }
-.pcp-legend-item { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: #444; font-weight: 600; }
+.pcp-legend-item { display: flex; align-items: center; gap: 7px; font-size: calc(11.5px * var(--fs, 1)); color: #444; font-weight: 600; }
 .pcp-ldot {
   width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
   box-shadow: 0 0 0 2.5px var(--gold), 0 1px 4px rgba(0,0,0,0.18);
@@ -344,12 +353,12 @@ body {
   padding: 12px 26px; display: flex; align-items: center; justify-content: space-between;
   direction: ltr; border-top: 3px solid var(--gold);
 }
-.pc-fi { display: flex; align-items: center; gap: 9px; color: var(--white); font-size: 13px; }
+.pc-fi { display: flex; align-items: center; gap: 9px; color: var(--white); font-size: calc(13px * var(--fs, 1)); }
 .pc-ficon {
   width: 28px; height: 28px; background: rgba(255,255,255,0.1);
   border: 1px solid rgba(201,168,76,0.4); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; color: var(--gold-lt);
+  font-size: calc(13px * var(--fs, 1)); color: var(--gold-lt);
 }
-.pc-fmeta { font-size: 10.5px; color: rgba(255,255,255,0.55); text-align: center; line-height: 1.65; }
+.pc-fmeta { font-size: calc(10.5px * var(--fs, 1)); color: rgba(255,255,255,0.55); text-align: center; line-height: 1.65; }
 .poster-canvas.rtl .pc-fmeta { direction: rtl; }
