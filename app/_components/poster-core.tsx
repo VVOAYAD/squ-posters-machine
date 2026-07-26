@@ -34,6 +34,8 @@ export type Step = {
   desc_en: string;
   color: DeptColor;
   hidden?: boolean;
+  /** Drawn as a diamond in the flowchart. Absent means a normal process step. */
+  kind?: "step" | "decision";
 };
 
 export type PosterData = {
@@ -358,6 +360,24 @@ export function StepEditor({
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button
+                    onClick={() =>
+                      updateStep(i, { kind: step.kind === "decision" ? "step" : "decision" })
+                    }
+                    type="button"
+                    title={
+                      step.kind === "decision"
+                        ? "قرار — يُرسم كمعيّن في المخطط"
+                        : "اجعلها نقطة قرار في المخطط"
+                    }
+                    className={`px-1 rounded text-[13px] leading-none ${
+                      step.kind === "decision"
+                        ? "text-[#c9a84c] bg-[#c9a84c]/15"
+                        : "text-neutral-400 hover:text-[#7a0020]"
+                    }`}
+                  >
+                    ◇
+                  </button>
                   <button
                     onClick={() => updateStep(i, { hidden: !hidden })}
                     className={`p-0.5 rounded ${
