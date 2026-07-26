@@ -38,10 +38,8 @@ export default function AddProcedureButton({ slug }: { slug: string }) {
       {asking && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" dir="rtl">
           <div className="bg-white rounded-lg shadow-2xl p-5 w-full max-w-sm">
-            <h3 className="font-bold text-[#7a0020] mb-1">ما اسمك؟</h3>
-            <p className="text-[11px] text-neutral-500 mb-3">
-              يُسجَّل مع كل تعديل حتى نعرف من قام بالتغيير.
-            </p>
+            <h3 className="font-bold text-[#7a0020] mb-1">اسمك</h3>
+            <p className="text-[11px] text-neutral-500 mb-3">يُحفظ مع الإجراء في سجل التعديلات.</p>
             <input
               autoFocus
               value={name}

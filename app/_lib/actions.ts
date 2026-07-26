@@ -4,13 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { sql, type ProcedureRow } from "./db";
 
-export type ProcedureInput = {
+export type SaveInput = {
+  /** The full poster document, serialized. */
+  poster: unknown;
   title_ar: string;
   title_en: string;
-  purpose: string;
-  steps: string[];
-  documents: string[];
-  notes: string;
   status: "draft" | "done";
 };
 
@@ -41,20 +39,17 @@ export async function createProcedure(slug: string, editor: string) {
   await logRevision(created.id, "created", name);
   revalidatePath("/");
   revalidatePath(`/section/${slug}`);
-  redirect(`/section/${slug}/${created.id}?edit=1`);
+  redirect(`/section/${slug}/${created.id}`);
 }
 
-export async function saveProcedure(id: number, slug: string, editor: string, data: ProcedureInput) {
+export async function saveProcedure(id: number, slug: string, editor: string, data: SaveInput) {
   const name = editor.trim() || "غير معروف";
 
   await sql()`
     update procedures set
+      poster     = ${JSON.stringify(data.poster)}::jsonb,
       title_ar   = ${data.title_ar},
       title_en   = ${data.title_en},
-      purpose    = ${data.purpose},
-      steps      = ${JSON.stringify(data.steps.filter((s) => s.trim()))}::jsonb,
-      documents  = ${JSON.stringify(data.documents.filter((d) => d.trim()))}::jsonb,
-      notes      = ${data.notes},
       status     = ${data.status},
       updated_by = ${name},
       updated_at = now()

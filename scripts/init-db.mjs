@@ -16,6 +16,9 @@ await sql`
   )
 `;
 
+// `poster` holds the whole poster document (see app/_components/poster-core.tsx).
+// title_ar/title_en are denormalized copies of the procedure name so the section
+// list can render without parsing every poster.
 await sql`
   create table if not exists procedures (
     id           serial primary key,
@@ -23,16 +26,20 @@ await sql`
     number       int  not null,
     title_ar     text not null default '',
     title_en     text not null default '',
-    purpose      text not null default '',
-    steps        jsonb not null default '[]'::jsonb,
-    documents    jsonb not null default '[]'::jsonb,
-    notes        text not null default '',
+    poster       jsonb not null default '{}'::jsonb,
     status       text not null default 'draft',
     updated_by   text not null default '',
     updated_at   timestamptz not null default now(),
     created_at   timestamptz not null default now()
   )
 `;
+
+// Migrate the first shape of this table (flat purpose/steps/documents/notes).
+await sql`alter table procedures add column if not exists poster jsonb not null default '{}'::jsonb`;
+await sql`alter table procedures drop column if exists purpose`;
+await sql`alter table procedures drop column if exists steps`;
+await sql`alter table procedures drop column if exists documents`;
+await sql`alter table procedures drop column if exists notes`;
 
 // procedure_id is nullable + ON DELETE SET NULL so a deleted procedure's history
 // survives it; section_slug/number keep the orphaned rows readable.

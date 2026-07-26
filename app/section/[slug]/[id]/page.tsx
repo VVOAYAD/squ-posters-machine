@@ -1,19 +1,16 @@
 import { notFound } from "next/navigation";
 import SiteHeader from "../../../_components/SiteHeader";
-import ProcedureView from "../../../_components/ProcedureView";
+import ProcedureEditor from "../../../_components/ProcedureEditor";
 import { getSection, getProcedure, getRevisions } from "../../../_lib/db";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProcedurePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string; id: string }>;
-  searchParams: Promise<{ edit?: string }>;
 }) {
   const { slug, id } = await params;
-  const { edit } = await searchParams;
 
   const procedureId = Number(id);
   if (!Number.isInteger(procedureId)) notFound();
@@ -24,18 +21,19 @@ export default async function ProcedurePage({
   const revisions = await getRevisions(procedureId);
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className="flex flex-col h-full">
       <SiteHeader
         crumbs={[
           { label: section.name_ar, href: `/section/${slug}` },
           { label: `إجراء ${procedure.number}` },
         ]}
       />
-      <ProcedureView
+      <ProcedureEditor
         procedure={procedure}
         revisions={revisions}
-        sectionName={section.name_ar}
-        startInEdit={edit === "1"}
+        sectionNameAr={section.name_ar}
+        sectionNameEn={section.name_en}
+        sectionSlug={slug}
       />
     </div>
   );

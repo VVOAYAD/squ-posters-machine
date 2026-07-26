@@ -31,10 +31,8 @@ export type ProcedureRow = {
   number: number;
   title_ar: string;
   title_en: string;
-  purpose: string;
-  steps: string[];
-  documents: string[];
-  notes: string;
+  /** The full poster document — shape lives in app/_components/poster-core.tsx. */
+  poster: unknown;
   status: "draft" | "done";
   updated_by: string;
   updated_at: string;
