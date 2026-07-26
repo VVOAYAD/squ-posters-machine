@@ -112,7 +112,7 @@ Thank you for your cooperation and your commitment to procedures that uphold smo
     "Beneficiary's bank account details",
     "Receipt / completion-of-work report",
   ],
-  phones: "5102 | 5126 | 5142 | 5113",
+  phones: "5102",
   email: "FINANCE@SQU.EDU.OM",
   hide: {},
 };

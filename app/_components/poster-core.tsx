@@ -124,7 +124,7 @@ export const DEFAULTS: PosterData = {
     { color: "g", title_ar: "تحويل المستحقات المالية إلى المستفيدين (الشركات) من قبل وزارة المالية", title_en: "Transfer of financial dues to beneficiaries (companies) by the Ministry of Finance", desc_ar: "يتم تنفيذ هذه الخطوة عبر النظام المالي لوزارة المالية برقم المستفيد", desc_en: "Executed via the Ministry of Finance system using the beneficiary's number" },
   ],
   showLegend: true,
-  phones: "5102 | 5126 | 5142 | 5113",
+  phones: "5102",
   email: "FINANCE@SQU.EDU.OM",
   hide: {},
 };
@@ -153,7 +153,7 @@ export function blankPoster(deptAr: string, deptEn: string): PosterData {
     stepsHead_en: "Procedure Steps",
     steps: [{ color: "m", title_ar: "", title_en: "", desc_ar: "", desc_en: "" }],
     showLegend: true,
-    phones: "5102 | 5126 | 5142 | 5113",
+    phones: "5102",
     email: "FINANCE@SQU.EDU.OM",
     hide: {},
   };
