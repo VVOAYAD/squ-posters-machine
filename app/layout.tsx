@@ -15,8 +15,9 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "SQU Posters Machine",
-  description: "Generator for SQU Financial Affairs Department artifacts — تعميمات, posters, news",
+  title: "دليل إجراءات دائرة الشؤون المالية | SQU",
+  description:
+    "Procedures directory for the SQU Financial Affairs Department — documented per section, with full edit history",
 };
 
 export default function RootLayout({

@@ -1,0 +1,18 @@
+[
+  { "slug": "coordination",         "name_ar": "قسم التنسيق والمتابعة والأرشفة", "name_en": "Coordination, Follow-up and Archiving Section", "grp": "director",    "sort": 1 },
+  { "slug": "financial-studies",    "name_ar": "قسم الدراسات المالية",            "name_en": "Financial Studies Section",                     "grp": "director",    "sort": 2 },
+
+  { "slug": "general-expenditure",  "name_ar": "قسم المصروفات العامة",            "name_en": "General Expenditure Section",                   "grp": "expenditure", "sort": 1 },
+  { "slug": "payroll-expenditure",  "name_ar": "قسم مصروفات الرواتب",             "name_en": "Payroll Expenditure Section",                   "grp": "expenditure", "sort": 2 },
+  { "slug": "scholarship-expenses", "name_ar": "قسم مصروفات الإيفاد",             "name_en": "Scholarship Expenses Section",                  "grp": "expenditure", "sort": 3 },
+  { "slug": "student-expenditure",  "name_ar": "قسم مصروفات الطلبة",              "name_en": "Student Expenditure Section",                   "grp": "expenditure", "sort": 4 },
+  { "slug": "research-expenditure", "name_ar": "قسم مصروفات البحوث",              "name_en": "Research Expenditure Section",                  "grp": "expenditure", "sort": 5 },
+  { "slug": "contract-expenditure", "name_ar": "قسم مصروفات العقود",              "name_en": "Contract Expenditure Section",                  "grp": "expenditure", "sort": 6 },
+
+  { "slug": "current-budget",       "name_ar": "قسم الموازنة الجارية",            "name_en": "Current Budget Section",                        "grp": "resources",   "sort": 1 },
+  { "slug": "development-budget",   "name_ar": "قسم الموازنة الإنمائية",          "name_en": "Development Budget Section",                    "grp": "resources",   "sort": 2 },
+  { "slug": "advance-payment",      "name_ar": "قسم السلف",                       "name_en": "Advance Payment Section",                       "grp": "resources",   "sort": 3 },
+  { "slug": "accounts",             "name_ar": "قسم الحسابات",                    "name_en": "Accounts Section",                              "grp": "resources",   "sort": 4 },
+  { "slug": "treasury",             "name_ar": "قسم الخزينة",                     "name_en": "Treasury Section",                              "grp": "resources",   "sort": 5 },
+  { "slug": "revenue",              "name_ar": "قسم الإيرادات",                   "name_en": "Revenue Section",                               "grp": "resources",   "sort": 6 }
+]
