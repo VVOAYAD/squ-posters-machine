@@ -22,7 +22,35 @@ async function logRevision(procedureId: number, action: string, editor: string) 
   `;
 }
 
-export async function createProcedure(slug: string, editor: string) {
+/**
+ * Renumbers a section 1..N in the given id order, in one statement.
+ * `number` carries no unique constraint, so no shuffling dance is needed.
+ */
+async function renumber(slug: string, orderedIds: number[]) {
+  if (!orderedIds.length) return;
+  await sql()`
+    update procedures as p
+    set number = v.pos
+    from (
+      select id, ordinality::int as pos
+      from unnest(${orderedIds}::int[]) with ordinality as t(id, ordinality)
+    ) as v
+    where p.id = v.id and p.section_slug = ${slug}
+  `;
+}
+
+async function orderedIds(slug: string): Promise<number[]> {
+  const rows = (await sql()`
+    select id from procedures where section_slug = ${slug} order by number, id
+  `) as { id: number }[];
+  return rows.map((r) => r.id);
+}
+
+/**
+ * @param position 1-based slot the new procedure should occupy.
+ *                 Omit (or pass 0) to append at the end.
+ */
+export async function createProcedure(slug: string, editor: string, position?: number) {
   const name = editor.trim() || "غير معروف";
 
   const rows = (await sql()`
@@ -36,8 +64,17 @@ export async function createProcedure(slug: string, editor: string) {
   `) as ProcedureRow[];
 
   const created = rows[0];
+
+  if (position && position > 0) {
+    const ids = (await orderedIds(slug)).filter((id) => id !== created.id);
+    const at = Math.min(Math.max(position - 1, 0), ids.length);
+    ids.splice(at, 0, created.id);
+    await renumber(slug, ids);
+  }
+
   await logRevision(created.id, "created", name);
   revalidatePath("/");
+
   revalidatePath(`/section/${slug}`);
   redirect(`/section/${slug}/${created.id}`);
 }
@@ -70,4 +107,24 @@ export async function deleteProcedure(id: number, slug: string, editor: string) 
   revalidatePath("/");
   revalidatePath(`/section/${slug}`);
   redirect(`/section/${slug}`);
+}
+
+/**
+ * Moves a procedure to a 1-based position within its section and renumbers
+ * the rest so the list stays 1..N with no gaps.
+ */
+export async function moveProcedure(slug: string, id: number, toPosition: number) {
+  const ids = await orderedIds(slug);
+  const from = ids.indexOf(id);
+  if (from === -1) return;
+
+  const to = Math.min(Math.max(toPosition - 1, 0), ids.length - 1);
+  if (from === to) return;
+
+  ids.splice(from, 1);
+  ids.splice(to, 0, id);
+  await renumber(slug, ids);
+
+  revalidatePath("/");
+  revalidatePath(`/section/${slug}`);
 }

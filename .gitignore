@@ -42,3 +42,8 @@ next-env.d.ts
 
 .vercel
 .env*
+
+# Translation work-files (generated, contain a snapshot of live data)
+batch*.json
+translations.json
+remaining.json
