@@ -8,7 +8,8 @@
  * Everything visual lives here so the two screens can never drift apart.
  */
 
-import { Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, ChevronUp, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
 import * as htmlToImage from "html-to-image";
 import { saveAs } from "file-saver";
 import { AlignmentType, BorderStyle, Document, Packer, Paragraph, TextRun } from "docx";
@@ -291,6 +292,14 @@ export function PosterPreview({ data, lang }: { data: PosterData; lang: Lang }) 
 
 /* ══ step editor ═══════════════════════════════════════════════ */
 
+const blankStep = (): Step => ({
+  color: "m",
+  title_ar: "",
+  title_en: "",
+  desc_ar: "",
+  desc_en: "",
+});
+
 export function StepEditor({
   steps,
   onChange,
@@ -301,132 +310,218 @@ export function StepEditor({
   lang: Lang;
 }) {
   const isAr = lang === "ar";
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
+
   const updateStep = (i: number, patch: Partial<Step>) => {
     const next = [...steps];
     next[i] = { ...next[i], ...patch };
     onChange(next);
   };
 
+  /** Move a step to a new position. Numbering follows the array, so nothing
+   *  else has to be touched. */
+  const move = (from: number, to: number) => {
+    if (from === to || to < 0 || to >= steps.length) return;
+    const next = [...steps];
+    next.splice(to, 0, next.splice(from, 1)[0]);
+    onChange(next);
+  };
+
+  /** Insert a blank step at `index`, pushing the rest down. */
+  const insertAt = (index: number) => {
+    const next = [...steps];
+    next.splice(index, 0, blankStep());
+    onChange(next);
+  };
+
   const colorBg = (c: DeptColor) =>
     c === "m" ? "bg-[#7a0020]" : c === "b" ? "bg-[#1a3f8a]" : "bg-[#1a6b3a]";
+
+  // A hover strip between two steps: click the + to insert there.
+  const insertBar = (index: number) => (
+    <div className="group/ins relative flex h-3.5 items-center justify-center">
+      <div className="absolute inset-x-0 top-1/2 h-px bg-transparent group-hover/ins:bg-[#c9a84c]/60" />
+      <button
+        type="button"
+        onClick={() => insertAt(index)}
+        title={isAr ? "إدراج خطوة هنا" : "Insert a step here"}
+        aria-label={isAr ? "إدراج خطوة هنا" : "Insert a step here"}
+        className="relative rounded-full border border-[#c9a84c] bg-white px-1.5 text-[11px] font-bold leading-none text-[#7a0020] opacity-0 transition-opacity group-hover/ins:opacity-100 focus:opacity-100"
+      >
+        +
+      </button>
+    </div>
+  );
 
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
         <span className="text-[10px] text-neutral-500 font-medium">{isAr ? "خطوات" : "Steps"}</span>
         <button
-          onClick={() =>
-            onChange([...steps, { color: "m", title_ar: "", title_en: "", desc_ar: "", desc_en: "" }])
-          }
+          onClick={() => onChange([...steps, blankStep()])}
           className="text-[10px] text-[#7a0020] font-bold flex items-center gap-1 hover:underline"
           type="button"
         >
           <Plus size={12} /> add step
         </button>
       </div>
-      <div className="space-y-3">
+      <div>
         {steps.map((step, i) => {
           const hidden = !!step.hidden;
+          const dragging = dragIndex === i;
+          const isTarget = overIndex === i && dragIndex !== null && dragIndex !== i;
           return (
-            <div
-              key={i}
-              className={`border rounded p-2 ${
-                hidden ? "border-[#7a0020]/30 bg-[#7a0020]/5" : "border-neutral-200 bg-neutral-50"
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`${colorBg(step.color)} text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ${
-                      hidden ? "opacity-40" : ""
-                    }`}
-                  >
-                    {i + 1}
-                  </span>
-                  <div className="flex gap-0.5">
-                    {(["m", "b", "g"] as DeptColor[]).map((c) => (
+            <div key={i}>
+              {insertBar(i)}
+              <div
+                onDragOver={(e) => {
+                  if (dragIndex === null) return;
+                  e.preventDefault();
+                  setOverIndex(i);
+                }}
+                onDragLeave={() => setOverIndex((v) => (v === i ? null : v))}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (dragIndex !== null) move(dragIndex, i);
+                  setDragIndex(null);
+                  setOverIndex(null);
+                }}
+                className={`border rounded p-2 transition-shadow ${
+                  hidden ? "border-[#7a0020]/30 bg-[#7a0020]/5" : "border-neutral-200 bg-neutral-50"
+                } ${dragging ? "opacity-40" : ""} ${
+                  isTarget ? "ring-2 ring-[#c9a84c] ring-offset-1" : ""
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span
+                      draggable
+                      onDragStart={(e) => {
+                        setDragIndex(i);
+                        e.dataTransfer.effectAllowed = "move";
+                        // Firefox needs data set for a drag to start at all.
+                        e.dataTransfer.setData("text/plain", String(i));
+                      }}
+                      onDragEnd={() => {
+                        setDragIndex(null);
+                        setOverIndex(null);
+                      }}
+                      title={isAr ? "اسحب لتغيير الترتيب" : "Drag to reorder"}
+                      className={`${colorBg(step.color)} text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing ${
+                        hidden ? "opacity-40" : ""
+                      }`}
+                    >
+                      {i + 1}
+                    </span>
+                    <div className="flex flex-col">
                       <button
-                        key={c}
-                        onClick={() => updateStep(i, { color: c })}
                         type="button"
-                        className={`${colorBg(c)} w-5 h-5 rounded-full text-white text-[9px] font-bold ${
-                          step.color === c ? "ring-2 ring-[#c9a84c]" : "opacity-50"
-                        }`}
-                        title={c === "m" ? "Internal" : c === "b" ? "Audit" : "Ministry"}
+                        onClick={() => move(i, i - 1)}
+                        disabled={i === 0}
+                        title={isAr ? "تحريك لأعلى" : "Move up"}
+                        aria-label={isAr ? "تحريك لأعلى" : "Move up"}
+                        className="text-neutral-400 hover:text-[#7a0020] disabled:opacity-25 disabled:hover:text-neutral-400 leading-none"
                       >
-                        {c.toUpperCase()}
+                        <ChevronUp size={12} />
                       </button>
-                    ))}
+                      <button
+                        type="button"
+                        onClick={() => move(i, i + 1)}
+                        disabled={i === steps.length - 1}
+                        title={isAr ? "تحريك لأسفل" : "Move down"}
+                        aria-label={isAr ? "تحريك لأسفل" : "Move down"}
+                        className="text-neutral-400 hover:text-[#7a0020] disabled:opacity-25 disabled:hover:text-neutral-400 leading-none"
+                      >
+                        <ChevronDown size={12} />
+                      </button>
+                    </div>
+                    <div className="flex gap-0.5">
+                      {(["m", "b", "g"] as DeptColor[]).map((c) => (
+                        <button
+                          key={c}
+                          onClick={() => updateStep(i, { color: c })}
+                          type="button"
+                          className={`${colorBg(c)} w-5 h-5 rounded-full text-white text-[9px] font-bold ${
+                            step.color === c ? "ring-2 ring-[#c9a84c]" : "opacity-50"
+                          }`}
+                          title={c === "m" ? "Internal" : c === "b" ? "Audit" : "Ministry"}
+                        >
+                          {c.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() =>
+                        updateStep(i, { kind: step.kind === "decision" ? "step" : "decision" })
+                      }
+                      type="button"
+                      title={
+                        step.kind === "decision"
+                          ? "قرار — يُرسم كمعيّن في المخطط"
+                          : "اجعلها نقطة قرار في المخطط"
+                      }
+                      className={`px-1 rounded text-[13px] leading-none ${
+                        step.kind === "decision"
+                          ? "text-[#c9a84c] bg-[#c9a84c]/15"
+                          : "text-neutral-400 hover:text-[#7a0020]"
+                      }`}
+                    >
+                      ◇
+                    </button>
+                    <button
+                      onClick={() => updateStep(i, { hidden: !hidden })}
+                      className={`p-0.5 rounded ${
+                        hidden ? "text-[#7a0020] bg-[#7a0020]/10" : "text-neutral-400 hover:text-[#7a0020]"
+                      }`}
+                      title={hidden ? "Currently hidden — click to show" : "Hide this step from poster"}
+                      type="button"
+                    >
+                      {hidden ? <EyeOff size={12} /> : <Eye size={12} />}
+                    </button>
+                    <button
+                      onClick={() => onChange(steps.filter((_, idx) => idx !== i))}
+                      className="text-neutral-400 hover:text-red-600"
+                      aria-label="remove step"
+                      type="button"
+                    >
+                      <Trash2 size={12} />
+                    </button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() =>
-                      updateStep(i, { kind: step.kind === "decision" ? "step" : "decision" })
+                <div className="space-y-1.5">
+                  <input
+                    type="text"
+                    placeholder={isAr ? "عنوان" : "Title"}
+                    value={isAr ? step.title_ar : step.title_en}
+                    onChange={(e) =>
+                      updateStep(i, isAr ? { title_ar: e.target.value } : { title_en: e.target.value })
                     }
-                    type="button"
-                    title={
-                      step.kind === "decision"
-                        ? "قرار — يُرسم كمعيّن في المخطط"
-                        : "اجعلها نقطة قرار في المخطط"
+                    dir={isAr ? "rtl" : "ltr"}
+                    className={`w-full px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none ${
+                      hidden ? "italic text-neutral-400" : ""
+                    }`}
+                  />
+                  <textarea
+                    placeholder={isAr ? "وصف" : "Description"}
+                    value={isAr ? step.desc_ar : step.desc_en}
+                    onChange={(e) =>
+                      updateStep(i, isAr ? { desc_ar: e.target.value } : { desc_en: e.target.value })
                     }
-                    className={`px-1 rounded text-[13px] leading-none ${
-                      step.kind === "decision"
-                        ? "text-[#c9a84c] bg-[#c9a84c]/15"
-                        : "text-neutral-400 hover:text-[#7a0020]"
+                    dir={isAr ? "rtl" : "ltr"}
+                    rows={2}
+                    className={`w-full px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none leading-relaxed ${
+                      hidden ? "italic text-neutral-400" : ""
                     }`}
-                  >
-                    ◇
-                  </button>
-                  <button
-                    onClick={() => updateStep(i, { hidden: !hidden })}
-                    className={`p-0.5 rounded ${
-                      hidden ? "text-[#7a0020] bg-[#7a0020]/10" : "text-neutral-400 hover:text-[#7a0020]"
-                    }`}
-                    title={hidden ? "Currently hidden — click to show" : "Hide this step from poster"}
-                    type="button"
-                  >
-                    {hidden ? <EyeOff size={12} /> : <Eye size={12} />}
-                  </button>
-                  <button
-                    onClick={() => onChange(steps.filter((_, idx) => idx !== i))}
-                    className="text-neutral-400 hover:text-red-600"
-                    aria-label="remove step"
-                    type="button"
-                  >
-                    <Trash2 size={12} />
-                  </button>
+                  />
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <input
-                  type="text"
-                  placeholder={isAr ? "عنوان" : "Title"}
-                  value={isAr ? step.title_ar : step.title_en}
-                  onChange={(e) =>
-                    updateStep(i, isAr ? { title_ar: e.target.value } : { title_en: e.target.value })
-                  }
-                  dir={isAr ? "rtl" : "ltr"}
-                  className={`w-full px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none ${
-                    hidden ? "italic text-neutral-400" : ""
-                  }`}
-                />
-                <textarea
-                  placeholder={isAr ? "وصف" : "Description"}
-                  value={isAr ? step.desc_ar : step.desc_en}
-                  onChange={(e) =>
-                    updateStep(i, isAr ? { desc_ar: e.target.value } : { desc_en: e.target.value })
-                  }
-                  dir={isAr ? "rtl" : "ltr"}
-                  rows={2}
-                  className={`w-full px-2 py-1 text-xs border border-neutral-300 rounded focus:border-[#7a0020] focus:outline-none leading-relaxed ${
-                    hidden ? "italic text-neutral-400" : ""
-                  }`}
-                />
               </div>
             </div>
           );
         })}
+        {steps.length > 0 && insertBar(steps.length)}
       </div>
     </div>
   );
