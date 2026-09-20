@@ -163,7 +163,8 @@ export default function ProcedureList({
                       {p.title_ar || "إجراء بدون عنوان"}
                     </h3>
                     <p className="text-[11px] text-neutral-400 mt-0.5 truncate">
-                      {p.updated_by ? `آخر تعديل: ${p.updated_by} · ${fmt(p.updated_at)}` : "لم يُعدَّل بعد"}
+                      <span className="text-neutral-500">أُدخل: {stamp(p.created_at)}</span>
+                      {p.updated_by && ` · آخر تعديل: ${p.updated_by} · ${fmt(p.updated_at)}`}
                     </p>
                   </div>
                   <StatusPill status={p.status} />
@@ -268,6 +269,13 @@ function StatusPill({ status }: { status: string }) {
       {done ? "مكتمل" : "مسودة"}
     </span>
   );
+}
+
+/** Date and time of entry — the director reads this against the deadline. */
+function stamp(ts: string) {
+  return new Date(ts).toLocaleString("ar-OM", {
+    year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+  });
 }
 
 function fmt(ts: string) {

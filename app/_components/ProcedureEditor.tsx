@@ -155,6 +155,38 @@ export default function ProcedureEditor({
 
   const flowTitle = lang === "ar" ? data.stepsHead_ar : data.stepsHead_en;
 
+  /** Entry/modification stamp, baked into the downloaded image as proof of when
+   *  this procedure was filed. Times come from the database, never the browser. */
+  const ProofStamp = () => (
+    <div
+      style={{
+        width: 1000,
+        boxSizing: "border-box",
+        background: "#fbfaf6",
+        borderTop: "2px solid #c9a84c",
+        padding: "10px 18px",
+        display: "flex",
+        justifyContent: "space-between",
+        gap: 16,
+        fontSize: 12,
+        color: "#500015",
+        direction: "rtl",
+        fontFamily: "var(--font-poster, var(--font-cairo)), Tahoma, sans-serif",
+      }}
+    >
+      <span>
+        <strong>تاريخ الإدخال:</strong> {stampFull(procedure.created_at)}
+      </span>
+      <span>
+        <strong>آخر تعديل:</strong>{" "}
+        {procedure.updated_by ? `${procedure.updated_by} · ${stampFull(procedure.updated_at)}` : "—"}
+      </span>
+      <span style={{ color: "#7a0020" }}>
+        {sectionNameAr} · إجراء {procedure.number}
+      </span>
+    </div>
+  );
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       {/* toolbar */}
@@ -188,7 +220,7 @@ export default function ProcedureEditor({
             onClick={() => downloadPng(lang)}
             className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white bg-black/30 rounded-md px-2.5 py-1.5"
           >
-            <Download size={12} /> PNG
+            <Download size={12} /> لقطة إثبات
           </button>
           <button
             onClick={downloadFlowchart}
@@ -295,6 +327,7 @@ export default function ProcedureEditor({
             <div style={{ zoom: 0.65 }}>
               <div ref={lang === "ar" ? arRef : enRef} style={previewStyle}>
                 <PosterPreview data={data} lang={lang} />
+                <ProofStamp />
               </div>
             </div>
 
@@ -313,6 +346,7 @@ export default function ProcedureEditor({
           <div style={{ position: "absolute", left: -99999, top: 0 }} aria-hidden>
             <div ref={lang === "ar" ? enRef : arRef} style={previewStyle}>
               <PosterPreview data={data} lang={lang === "ar" ? "en" : "ar"} />
+              <ProofStamp />
             </div>
           </div>
         </main>
@@ -370,6 +404,12 @@ export default function ProcedureEditor({
       )}
     </div>
   );
+}
+
+function stampFull(ts: string) {
+  return new Date(ts).toLocaleString("ar-OM", {
+    year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+  });
 }
 
 function fmt(ts: string) {

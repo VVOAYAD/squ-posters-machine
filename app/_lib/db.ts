@@ -23,6 +23,8 @@ export type SectionRow = {
   grp: GroupKey;
   sort: number;
   procedure_count: number;
+  /** When the most recent procedure in this section was first entered. */
+  last_entry: string | null;
 };
 
 export type ProcedureRow = {
@@ -50,7 +52,8 @@ export type RevisionRow = {
 export async function getSections(): Promise<SectionRow[]> {
   return (await sql()`
     select s.slug, s.name_ar, s.name_en, s.grp, s.sort,
-           count(p.id)::int as procedure_count
+           count(p.id)::int as procedure_count,
+           max(p.created_at) as last_entry
     from sections s
     left join procedures p on p.section_slug = s.slug
     group by s.slug, s.name_ar, s.name_en, s.grp, s.sort
@@ -60,7 +63,7 @@ export async function getSections(): Promise<SectionRow[]> {
 
 export async function getSection(slug: string): Promise<SectionRow | null> {
   const rows = (await sql()`
-    select slug, name_ar, name_en, grp, sort, 0 as procedure_count
+    select slug, name_ar, name_en, grp, sort, 0 as procedure_count, null as last_entry
     from sections where slug = ${slug}
   `) as SectionRow[];
   return rows[0] ?? null;

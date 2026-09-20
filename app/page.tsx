@@ -74,6 +74,16 @@ function SectionCard({ section }: { section: SectionRow }) {
       <p className="text-[11px] text-neutral-500 mt-1.5 leading-snug" dir="ltr">
         {section.name_en}
       </p>
+      <p className="text-[10px] text-neutral-400 mt-1.5">
+        {section.last_entry ? `آخر إدخال: ${stamp(section.last_entry)}` : "لم يُدخل أي إجراء بعد"}
+      </p>
     </Link>
   );
+}
+
+/** Date and time the section last added a procedure. */
+function stamp(ts: string) {
+  return new Date(ts).toLocaleString("ar-OM", {
+    year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
+  });
 }
