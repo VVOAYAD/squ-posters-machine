@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LayoutGrid, ChevronLeft } from "lucide-react";
+import { LayoutGrid, ChevronLeft, ClipboardList } from "lucide-react";
 
 export default function SiteHeader({
   crumbs = [],
@@ -39,6 +39,14 @@ export default function SiteHeader({
         )}
       </div>
 
+      <div className="flex items-center gap-2 shrink-0">
+      <Link
+        href="/proof"
+        className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white border border-white/25 rounded-md px-3 py-1.5 transition-colors"
+      >
+        <ClipboardList size={13} />
+        سجل الإدخال
+      </Link>
       <Link
         href="/poster"
         className="flex items-center gap-1.5 text-xs text-white/80 hover:text-white border border-white/25 rounded-md px-3 py-1.5 transition-colors shrink-0"
@@ -46,6 +54,7 @@ export default function SiteHeader({
         <LayoutGrid size={13} />
         Posters Machine
       </Link>
+      </div>
     </header>
   );
 }

@@ -86,3 +86,28 @@ export async function getRevisions(id: number): Promise<RevisionRow[]> {
     from revisions where procedure_id = ${id} order by created_at desc
   `) as RevisionRow[];
 }
+
+export type ProofRow = {
+  section_slug: string;
+  section_ar: string;
+  section_en: string;
+  grp: GroupKey;
+  number: number;
+  title_ar: string;
+  status: "draft" | "done";
+  created_at: string;
+  updated_at: string;
+  updated_by: string;
+};
+
+/** Every procedure in the department, for the single entry-record sheet. */
+export async function getProofRows(): Promise<ProofRow[]> {
+  return (await sql()`
+    select p.section_slug,
+           s.name_ar as section_ar, s.name_en as section_en, s.grp,
+           p.number, p.title_ar, p.status, p.created_at, p.updated_at, p.updated_by
+    from procedures p
+    join sections s on s.slug = p.section_slug
+    order by s.grp, s.sort, p.number
+  `) as ProofRow[];
+}
